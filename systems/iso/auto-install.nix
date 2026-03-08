@@ -76,13 +76,10 @@ in
       echo "=== NixOS auto-install: disk=$DISK ==="
       export DISKO_DEVICE="$DISK"
 
-      # Ищем каталог флейка (на live-системе ISO может быть смонтирован в /iso, /run/iso и т.д.)
+      # Ищем каталог флейка. На NixOS live ISO контент часто в /iso/iso/nixos-config (sr0 смонтирован в /iso).
       CONFIG_DIR=""
-      for base in /iso /run/iso /mnt/cdrom /cdrom .; do
-        for sub in "/nixos-config" "/iso/nixos-config"; do
-          p="$base$sub"
-          [[ -f "$p/flake.nix" && -f "$p/layers/os/disko.nix" ]] && CONFIG_DIR="$p" && break 2
-        done
+      for p in "/iso/iso/nixos-config" "/iso/nixos-config" "/run/iso/nixos-config" "/mnt/cdrom/nixos-config"; do
+        [[ -f "$p/flake.nix" && -f "$p/layers/os/disko.nix" ]] && CONFIG_DIR="$p" && break
       done
       if [[ -z "$CONFIG_DIR" ]]; then
         CONFIG_DIR="$(find /iso /run /mnt /cdrom -name "disko.nix" -path "*/layers/os/disko.nix" 2>/dev/null | head -1 | xargs dirname | xargs dirname | xargs dirname)"
@@ -93,8 +90,11 @@ in
       fi
       echo ">>> Flake: $CONFIG_DIR"
 
+      DISKO_CONFIG="$CONFIG_DIR/layers/os/disko.nix"
+      [[ ! -f "$DISKO_CONFIG" ]] && echo "ERROR: нет файла $DISKO_CONFIG" && exit 1
+
       echo ">>> Running disko (destroy+format+mount)..."
-      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount ./layers/os/disko.nix
+      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount "$DISKO_CONFIG"
 
       echo ">>> Copying flake to /mnt/etc/nixos..."
       mkdir -p /mnt/etc
