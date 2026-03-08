@@ -65,5 +65,25 @@
     # Сборка: nix build .#iso
     packages.${system}.iso =
       self.nixosConfigurations.iso.config.system.build.isoImage;
+
+    # Сборка ISO и вывод пути к образу (удобно после сборки сразу видеть путь)
+    apps.${system}.iso-build = {
+      type = "app";
+      program = toString (pkgs.writeShellScript "iso-build" ''
+        set -e
+        export PATH="${pkgs.lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:$PATH"
+        nix build .#iso "$@"
+        echo ""
+        echo "Путь к образу:"
+        if [[ -d result/iso ]]; then
+          for f in result/iso/*.iso; do
+            [[ -e "$f" ]] && echo "  $(realpath "$f")" && break
+          done
+          ls -la result/iso/
+        else
+          echo "  $(realpath result)/iso/"
+        fi
+      '');
+    };
   };
 }

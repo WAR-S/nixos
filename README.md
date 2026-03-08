@@ -11,7 +11,11 @@ cd /path/to/nixos-nettop
 nix --extra-experimental-features "nix-command flakes" build .#iso
 ```
 
-Готовый образ будет в `result/iso/nixos-minimal-*.iso`. Запись на флешку:
+Готовый образ будет в `result/iso/nixos-minimal-*.iso`. Чтобы после сборки сразу увидеть полный путь к образу, можно использовать:
+
+```bash
+nix --extra-experimental-features "nix-command flakes" run .#iso-build
+``` Запись на флешку:
 
 ```bash
 # подставьте свой блок-устройство (lsblk)
