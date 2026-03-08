@@ -67,14 +67,17 @@
         ];
       };
 
-    # Конфигурация для сборки установочного ISO: минимальный образ + пакеты + самоустановка + сжатие
+    # Конфигурация для сборки установочного ISO: минимальный образ + пакеты + самоустановка + сжатие.
+    # В образ кладём всё для офлайн: nixpkgs, disko, замыкание edge-node (nixos-install без сети).
     nixosConfigurations.iso =
       nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
           inherit infra;
-          # Путь к исходникам флейка для копирования в ISO (самоустановка)
           flakeSrc = self.outPath or self;
+          diskoPackage = disko.packages.${system}.default;
+          # Замыкание edge-node попадает в store образа — nixos-install не качает из кэша
+          edgeNodeToplevel = self.nixosConfigurations.edge-node.config.system.build.toplevel;
         };
         modules = [
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
