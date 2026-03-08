@@ -1,9 +1,12 @@
 # Модуль для самоустанавливающегося ISO.
-# Загрузка с параметрами ядра: nixos.autoInstall=1 nixos.installDisk=/dev/sda
-# Тогда при старте выполнится разметка (disko), копирование конфига и nixos-install.
+# По умолчанию при загрузке автоматически запускается установка на указанный диск.
+# Чтобы загрузиться без установки — в GRUB (e) убери из строки linux: nixos.autoInstall=1 и nixos.installDisk=...
 { config, pkgs, flakeSrc, diskoPackage, ... }:
 
 let
+  # Диск по умолчанию для автоустановки (Proxmox: SCSI/IDE → /dev/sda, VirtIO → /dev/vda)
+  defaultInstallDisk = "/dev/sda";
+
   # PATH для скрипта: disko, nix, coreutils и т.д.
   installPath = pkgs.lib.makeBinPath [
     pkgs.gnugrep
@@ -14,6 +17,12 @@ let
   ];
 in
 {
+  # Параметры ядра по умолчанию: автоустановка при загрузке без правки GRUB
+  boot.kernelParams = [
+    "nixos.autoInstall=1"
+    "nixos.installDisk=${defaultInstallDisk}"
+  ];
+
   # Уменьшение размера ISO: более сильное сжатие squashfs
   isoImage.squashfsCompression = "xz -Xdict-size 100%";
   # Опционально: только xz (без dict-size даёт чуть больший размер, но быстрее собирается)
@@ -56,7 +65,7 @@ in
               ;;
           esac
         done
-        echo "/dev/sda"
+        echo "${defaultInstallDisk}"
       }
 
       AUTO="$(get_cmdline)"
