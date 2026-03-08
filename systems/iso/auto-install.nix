@@ -12,6 +12,7 @@ let
     pkgs.util-linux
     pkgs.nix
     pkgs.coreutils
+    pkgs.nixos-install-tools
     diskoPackage
   ];
 in
@@ -38,8 +39,8 @@ in
   # Замыкание edge-node в store образа — nixos-install не качает из кэша (офлайн)
   environment.etc."edge-node-toplevel".source = edgeNodeToplevel;
 
-  # disko и nix в образе (disko — бинарь из флейка, без nix run на live)
-  environment.systemPackages = [ pkgs.nix diskoPackage ];
+  # disko, nix и nixos-install-tools в образе (для скрипта автоустановки)
+  environment.systemPackages = [ pkgs.nix pkgs.nixos-install-tools diskoPackage ];
 
   # Сервис: при загрузке с nixos.autoInstall=1 запускает установку (script — строка, не derivation)
   systemd.services.nixos-auto-install = {
