@@ -32,7 +32,7 @@
         program = toString (pkgs.writeShellScript "iso-build" ''
           set -e
           export PATH="${pkgs.lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:$PATH"
-          OUT="$(nix build .#iso --print-out-paths --no-link "$@" | head -1)"
+          OUT="$(nix --extra-experimental-features "nix-command flakes" build .#iso --print-out-paths --no-link "$@" | head -1)"
           if [[ -d "$OUT" ]]; then
             for f in "$OUT"/*.iso; do
               if [[ -e "$f" ]]; then
