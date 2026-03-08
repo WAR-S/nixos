@@ -1,4 +1,5 @@
 # Описание разметки диска. Принимает устройство (для модуля — из infra, для CLI — из DISKO_DEVICE).
+# Разделы: BIOS boot (для GRUB/SeaBIOS), ESP (UEFI), root.
 { device }:
 {
   disk.main = {
@@ -7,6 +8,11 @@
     content = {
       type = "gpt";
       partitions = {
+        bios = {
+          size = "1M";
+          type = "EF02";  # BIOS boot partition (GRUB legacy)
+          content = { type = "none"; };
+        };
         ESP = {
           size = "512M";
           type = "EF00";
