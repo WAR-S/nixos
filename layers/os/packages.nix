@@ -10,6 +10,5 @@
     jq
     yq
     neofetch
-    openvpn
   ];
 }

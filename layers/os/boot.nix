@@ -1,7 +1,9 @@
-{ ... }:
+# Загрузчик + разметка диска (disko). fileSystems подставляет disko автоматически.
+{ infra, ... }:
 
 {
-  # fileSystems генерируются из layers/os/disko-layout.nix (disko-module.nix)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  disko.devices = import ./disko-layout.nix { device = infra.os.diskDevice; };
 }
