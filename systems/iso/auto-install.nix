@@ -28,9 +28,9 @@ in
   # Опционально: только xz (без dict-size даёт чуть больший размер, но быстрее собирается)
   # isoImage.squashfsCompression = "xz";
 
-  # Кладём флейк в образ, чтобы установщик мог его использовать
+  # Кладём флейк в корень ISO (на live-системе может быть /iso/nixos-config или /run/iso/nixos-config)
   isoImage.contents = [
-    { source = flakeSrc; target = "/iso/nixos-config"; }
+    { source = flakeSrc; target = "/nixos-config"; }
   ];
 
   # disko нужен для автоматической разметки при самоустановке
@@ -76,12 +76,29 @@ in
       echo "=== NixOS auto-install: disk=$DISK ==="
       export DISKO_DEVICE="$DISK"
 
+      # Ищем каталог флейка (на live-системе ISO может быть смонтирован в /iso, /run/iso и т.д.)
+      CONFIG_DIR=""
+      for base in /iso /run/iso /mnt/cdrom /cdrom .; do
+        for sub in "/nixos-config" "/iso/nixos-config"; do
+          p="$base$sub"
+          [[ -f "$p/flake.nix" && -f "$p/layers/os/disko.nix" ]] && CONFIG_DIR="$p" && break 2
+        done
+      done
+      if [[ -z "$CONFIG_DIR" ]]; then
+        CONFIG_DIR="$(find /iso /run /mnt /cdrom -name "disko.nix" -path "*/layers/os/disko.nix" 2>/dev/null | head -1 | xargs dirname | xargs dirname | xargs dirname)"
+      fi
+      if [[ -z "$CONFIG_DIR" || ! -f "$CONFIG_DIR/flake.nix" ]]; then
+        echo "ERROR: nixos-config (flake) не найден на образе. Проверьте: ls -laR /iso /run/iso"
+        exit 1
+      fi
+      echo ">>> Flake: $CONFIG_DIR"
+
       echo ">>> Running disko (destroy+format+mount)..."
-      disko --mode destroy,format,mount /iso/nixos-config/layers/os/disko.nix
+      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount ./layers/os/disko.nix
 
       echo ">>> Copying flake to /mnt/etc/nixos..."
       mkdir -p /mnt/etc
-      cp -r /iso/nixos-config /mnt/etc/nixos
+      cp -r "$CONFIG_DIR" /mnt/etc/nixos
 
       echo ">>> Running nixos-install..."
       nixos-install --flake /mnt/etc/nixos#edge-node --no-root-passwd
