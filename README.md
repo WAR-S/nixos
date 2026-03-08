@@ -2,11 +2,13 @@
 
 ## Сборка установочного ISO
 
-На хосте с Nix (и включёнными flakes):
+Образ — минимальный установщик NixOS с уже добавленными твоими пакетами (`git`, `vim`, `curl`, `htop`, `openssh`, `jq`, `yq`) и пользователем `wars` (sudo без пароля). Сеть в ISO не трогаем — на live-системе используется стандартная конфигурация установщика.
+
+На хосте с Nix:
 
 ```bash
 cd /path/to/nixos-nettop
-nix build .#iso
+nix --extra-experimental-features "nix-command flakes" build .#iso
 ```
 
 Готовый образ будет в `result/iso/nixos-minimal-*.iso`. Запись на флешку:

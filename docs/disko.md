@@ -33,7 +33,7 @@ ls -la /dev/disk/by-id/
 export DISKO_DEVICE=/dev/nvme0n1   # подставьте свой диск
 
 # Разметить и смонтировать в /mnt (для последующей установки)
-sudo nix run .#disko -- --mode disko ./layers/os/disko.nix
+sudo nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode disko ./layers/os/disko.nix
 ```
 
 После этого разделы смонтированы в `/mnt` и `/mnt/boot`.
@@ -44,7 +44,7 @@ sudo nix run .#disko -- --mode disko ./layers/os/disko.nix
 
 ```bash
 export DISKO_DEVICE=/dev/nvme0n1
-sudo nix run .#disko -- --mode zap_create_empty ./layers/os/disko.nix
+sudo nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode zap_create_empty ./layers/os/disko.nix
 ```
 
 ### 4. Установка/обновление NixOS

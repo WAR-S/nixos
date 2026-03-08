@@ -43,13 +43,16 @@
         ];
       };
 
-    # Конфигурация для сборки установочного ISO (минимальный образ)
+    # Конфигурация для сборки установочного ISO: минимальный образ + твои пакеты и пользователи
     nixosConfigurations.iso =
       nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = { inherit infra; };
         modules = [
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/channel.nix"
+          ./layers/os/packages.nix
+          ./layers/os/users.nix
         ];
       };
 
