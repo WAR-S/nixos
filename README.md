@@ -4,18 +4,17 @@
 
 Образ — минимальный установщик NixOS с уже добавленными твоими пакетами (`git`, `vim`, `curl`, `htop`, `openssh`, `jq`, `yq`) и пользователем `wars` (sudo без пароля). Сеть в ISO не трогаем — на live-системе используется стандартная конфигурация установщика.
 
-На хосте с Nix:
+На хосте с Nix (или через Makefile):
 
 ```bash
 cd /path/to/nixos-nettop
-nix --extra-experimental-features "nix-command flakes" build .#iso
+make iso
+# или: nix --extra-experimental-features "nix-command flakes" build .#iso
 ```
 
-Готовый образ будет в `result/nixos-minimal-*.iso` (симлинк `result` указывает на каталог с одним файлом). Чтобы собрать **без симлинка** и скопировать ISO в текущую директорию (один файл):
+Готовый образ будет в `result/nixos-minimal-*.iso` (симлинк `result` указывает на каталог с одним файлом). Чтобы собрать **без симлинка** и скопировать ISO в текущую директорию: `make iso-copy` (или `nix run .#iso-build` с флагами flakes).
 
-```bash
-nix --extra-experimental-features "nix-command flakes" run .#iso-build
-```
+Доступные цели Makefile: `make help` — список (iso, iso-copy, check, clean, clean-hard).
 
 После этого в каталоге появится файл `nixos-minimal-*.iso` и в выводе — его полный путь.
 
@@ -28,6 +27,17 @@ sudo dd if=nixos-minimal-*.iso of=/dev/sdX status=progress
 # sudo dd if=result/nixos-minimal-*.iso of=/dev/sdX status=progress
 sync
 ```
+
+### Очистка store после сборки
+
+Симлинк `result` только ссылается на каталог в `/nix/store`; данные хранятся там. Чтобы освободить место после того, как образ скопирован или записан на флешку:
+
+```bash
+rm -f result
+nix store gc
+```
+
+Или более жёсткая очистка (в т.ч. старые поколения): `nix-collect-garbage -d`. Удалятся только недостижимые артефакты; то, что нужно для текущей системы, Nix не трогает.
 
 ### Самоустановка на диск
 
