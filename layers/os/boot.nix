@@ -9,7 +9,7 @@
     efiSupport = true;              # установка в ESP — для UEFI
     efiInstallAsRemovable = true;   # EFI/BOOT/BOOTX64.EFI — чтобы Proxmox/VM видели диск без NVRAM
   };
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.canTouchEfiVariables = false;  # требуется при efiInstallAsRemovable = true
 
   disko.devices = import ./disko-layout.nix { device = infra.os.diskDevice; };
 }
