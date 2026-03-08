@@ -9,10 +9,12 @@
       type = "gpt";
       partitions = {
         bios = {
+          name = "disk-main-bios";
           size = "1M";
           type = "EF02";  # BIOS boot partition (GRUB legacy), без ФС
         };
         ESP = {
+          name = "disk-main-ESP";
           size = "512M";
           type = "EF00";
           content = {
@@ -23,6 +25,7 @@
           };
         };
         root = {
+          name = "disk-main-root";
           size = "100%";
           content = {
             type = "filesystem";
