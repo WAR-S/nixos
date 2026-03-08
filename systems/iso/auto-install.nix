@@ -1,20 +1,18 @@
 # Модуль для самоустанавливающегося ISO.
 # По умолчанию при загрузке автоматически запускается установка на указанный диск.
 # Чтобы загрузиться без установки — в GRUB (e) убери из строки linux: nixos.autoInstall=1 и nixos.installDisk=...
-# Используем pkgs.disko (из того же nixpkgs, что и ISO), чтобы не было несовместимости lib на live-системе.
+# На live-системе вызываем disko через nix run из флейка на ISO — так nix подтянет closure из кэша (nixpkgs не в store образа).
 { config, pkgs, flakeSrc, ... }:
 
 let
   # Диск по умолчанию для автоустановки (Proxmox: SCSI/IDE → /dev/sda, VirtIO → /dev/vda)
   defaultInstallDisk = "/dev/sda";
 
-  # PATH для скрипта: disko из nixpkgs (совместим с eval на live), nix, coreutils
   installPath = pkgs.lib.makeBinPath [
     pkgs.gnugrep
     pkgs.util-linux
     pkgs.nix
     pkgs.coreutils
-    pkgs.disko
   ];
 in
 {
@@ -34,8 +32,8 @@ in
     { source = flakeSrc; target = "/nixos-config"; }
   ];
 
-  # disko из nixpkgs (тот же контекст, что и на live — без конфликта lib.match)
-  environment.systemPackages = [ pkgs.disko ];
+  # nix с flakes — disko вызываем через nix run из флейка на ISO
+  environment.systemPackages = [ pkgs.nix ];
 
   # Сервис: при загрузке с nixos.autoInstall=1 запускает установку (script — строка, не derivation)
   systemd.services.nixos-auto-install = {
@@ -95,8 +93,15 @@ in
       DISKO_CONFIG="$CONFIG_DIR/layers/os/disko.nix"
       [[ ! -f "$DISKO_CONFIG" ]] && echo "ERROR: нет файла $DISKO_CONFIG" && exit 1
 
+      # Подтягиваем closure флейка (в т.ч. nixpkgs) и получаем путь для NIX_PATH
+      echo ">>> Resolving nixpkgs path from flake..."
+      NIXPKGS_PATH_FILE="$(cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" build .#nixpkgs-path-file --print-out-paths --no-link 2>/dev/null | head -1)"
+      if [[ -n "$NIXPKGS_PATH_FILE" && -f "$NIXPKGS_PATH_FILE" ]]; then
+        export NIX_PATH="nixpkgs=$(cat "$NIXPKGS_PATH_FILE"):''${NIX_PATH:-}"
+      fi
+
       echo ">>> Running disko (destroy+format+mount)..."
-      disko --mode destroy,format,mount "$DISKO_CONFIG"
+      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount "$DISKO_CONFIG"
 
       echo ">>> Copying flake to /mnt/etc/nixos..."
       mkdir -p /mnt/etc
