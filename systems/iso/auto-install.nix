@@ -40,7 +40,8 @@ in
   systemd.services.nixos-auto-install = {
     description = "NixOS auto-install to disk";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
     serviceConfig.Type = "oneshot";
     script = ''
       set -e
