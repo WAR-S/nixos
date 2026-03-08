@@ -22,9 +22,33 @@
     nixpkgsPath = pkgs.path;
   in {
 
-    apps.${system}.disko = {
-      type = "app";
-      program = "${disko.packages.${system}.default}/bin/disko";
+    apps.${system} = {
+      disko = {
+        type = "app";
+        program = "${disko.packages.${system}.default}/bin/disko";
+      };
+      iso-build = {
+        type = "app";
+        program = toString (pkgs.writeShellScript "iso-build" ''
+          set -e
+          export PATH="${pkgs.lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:$PATH"
+          OUT="$(nix build .#iso --print-out-paths --no-link "$@" | head -1)"
+          if [[ -d "$OUT" ]]; then
+            for f in "$OUT"/*.iso; do
+              if [[ -e "$f" ]]; then
+                cp -f "$f" ./"$(basename "$f")"
+                echo ""
+                echo "Образ скопирован в текущую директорию:"
+                echo "  $(realpath "./$(basename "$f")")"
+                ls -la "./$(basename "$f")"
+                exit 0
+              fi
+            done
+          fi
+          echo "ISO не найден в $OUT"
+          exit 1
+        '');
+      };
     };
 
     nixosConfigurations.edge-node =
@@ -70,29 +94,5 @@
       cp "$src/iso/"*.iso $out/
     '';
 
-    # Сборка ISO, копирование файла в текущую директорию и вывод пути (без симлинка result)
-    apps.${system}.iso-build = {
-      type = "app";
-      program = toString (pkgs.writeShellScript "iso-build" ''
-        set -e
-        export PATH="${pkgs.lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:$PATH"
-        # Собираем без создания симлинка result, получаем путь к артефакту
-        OUT="$(nix build .#iso --print-out-paths --no-link "$@" | head -1)"
-        if [[ -d "$OUT" ]]; then
-          for f in "$OUT"/*.iso; do
-            if [[ -e "$f" ]]; then
-              cp -f "$f" ./"$(basename "$f")"
-              echo ""
-              echo "Образ скопирован в текущую директорию:"
-              echo "  $(realpath "./$(basename "$f")")"
-              ls -la "./$(basename "$f")"
-              exit 0
-            fi
-          done
-        fi
-        echo "ISO не найден в $OUT"
-        exit 1
-      '');
-    };
   };
 }
