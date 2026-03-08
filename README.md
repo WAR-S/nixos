@@ -1,4 +1,23 @@
-# nixos
+# nixos-nettop
+
+## Сборка установочного ISO
+
+На хосте с Nix (и включёнными flakes):
+
+```bash
+cd /path/to/nixos-nettop
+nix build .#iso
+```
+
+Готовый образ будет в `result/iso/nixos-minimal-*.iso`. Запись на флешку:
+
+```bash
+# подставьте свой блок-устройство (lsblk)
+sudo dd if=result/iso/nixos-minimal-*.iso of=/dev/sdX status=progress
+sync
+```
+
+---
 
 # Техническое задание
 
