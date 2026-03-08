@@ -101,7 +101,7 @@ in
       fi
 
       echo ">>> Running disko (destroy+format+mount)..."
-      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount "$DISKO_CONFIG"
+      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount --yes-wipe-all-disks "$DISKO_CONFIG"
 
       echo ">>> Copying flake to /mnt/etc/nixos..."
       mkdir -p /mnt/etc
