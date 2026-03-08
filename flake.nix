@@ -66,23 +66,28 @@
     packages.${system}.iso =
       self.nixosConfigurations.iso.config.system.build.isoImage;
 
-    # Сборка ISO и вывод пути к образу (удобно после сборки сразу видеть путь)
+    # Сборка ISO, копирование файла в текущую директорию и вывод пути (без симлинка result)
     apps.${system}.iso-build = {
       type = "app";
       program = toString (pkgs.writeShellScript "iso-build" ''
         set -e
         export PATH="${pkgs.lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:$PATH"
-        nix build .#iso "$@"
-        echo ""
-        echo "Путь к образу:"
-        if [[ -d result/iso ]]; then
-          for f in result/iso/*.iso; do
-            [[ -e "$f" ]] && echo "  $(realpath "$f")" && break
+        # Собираем без создания симлинка result, получаем путь к артефакту
+        OUT="$(nix build .#iso --print-out-paths --no-link "$@" | head -1)"
+        if [[ -d "$OUT/iso" ]]; then
+          for f in "$OUT"/iso/*.iso; do
+            if [[ -e "$f" ]]; then
+              cp -f "$f" ./"$(basename "$f")"
+              echo ""
+              echo "Образ скопирован в текущую директорию:"
+              echo "  $(realpath "./$(basename "$f")")"
+              ls -la "./$(basename "$f")"
+              exit 0
+            fi
           done
-          ls -la result/iso/
-        else
-          echo "  $(realpath result)/iso/"
         fi
+        echo "ISO не найден в $OUT"
+        exit 1
       '');
     };
   };

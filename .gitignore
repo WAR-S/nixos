@@ -1,0 +1,25 @@
+# Nix build outputs (симлинки и артефакты)
+result
+result-*
+
+# Собранные образы (если не хотите коммитить в репо)
+*.iso
+
+# Direnv
+.direnv/
+.envrc
+
+# Редакторы / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Временные файлы
+*.tmp
+*.bak
+*.log
