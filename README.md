@@ -19,6 +19,23 @@ sudo dd if=result/iso/nixos-minimal-*.iso of=/dev/sdX status=progress
 sync
 ```
 
+### Самоустановка на диск
+
+Если загрузиться с флешки с **параметрами ядра** `nixos.autoInstall=1` и (опционально) `nixos.installDisk=/dev/sda`, то при старте автоматически выполнится:
+
+1. разметка диска через disko (по `layers/os/disko-layout.nix`);
+2. копирование конфига с ISO в `/etc/nixos` на целевом диске;
+3. `nixos-install --flake ...#edge-node`;
+4. перезагрузка.
+
+Как включить: в меню загрузки (GRUB) добавь к строке ядра в конец: `nixos.autoInstall=1 nixos.installDisk=/dev/sda` (диск можно сменить). Без этих параметров загрузка как обычный live-образ, установка вручную.
+
+### Уменьшение размера образа
+
+- В конфиге ISO включено сжатие squashfs: `xz -Xdict-size 100%` — образ меньше, сборка дольше.
+- Если нужна быстрая сборка, в `systems/iso/auto-install.nix` можно заменить на `isoImage.squashfsCompression = "xz";` или `"zstd"`.
+- Лишние пакеты в `layers/os/packages.nix` для live-образа можно вынести в отдельный список и не добавлять их в ISO.
+
 ---
 
 # Техническое задание

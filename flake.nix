@@ -43,16 +43,22 @@
         ];
       };
 
-    # Конфигурация для сборки установочного ISO: минимальный образ + твои пакеты и пользователи
+    # Конфигурация для сборки установочного ISO: минимальный образ + пакеты + самоустановка + сжатие
     nixosConfigurations.iso =
       nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit infra; };
+        specialArgs = {
+          inherit infra;
+          # Путь к исходникам флейка для копирования в ISO (самоустановка)
+          flakeSrc = self.outPath or self;
+          diskoPackage = disko.packages.${system}.default;
+        };
         modules = [
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/channel.nix"
           ./layers/os/packages.nix
           ./layers/os/users.nix
+          ./systems/iso/auto-install.nix
         ];
       };
 
