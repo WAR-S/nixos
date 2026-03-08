@@ -1,0 +1,5 @@
+os:
+  hostname: edge-node
+  timezone: UTC
+  # Устройство диска на целевом хосте (для disko и разметки)
+  diskDevice: /dev/sda
