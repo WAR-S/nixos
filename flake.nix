@@ -75,7 +75,6 @@
           inherit infra;
           # Путь к исходникам флейка для копирования в ISO (самоустановка)
           flakeSrc = self.outPath or self;
-          diskoPackage = disko.packages.${system}.default;
         };
         modules = [
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"

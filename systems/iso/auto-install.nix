@@ -1,19 +1,20 @@
 # Модуль для самоустанавливающегося ISO.
 # По умолчанию при загрузке автоматически запускается установка на указанный диск.
 # Чтобы загрузиться без установки — в GRUB (e) убери из строки linux: nixos.autoInstall=1 и nixos.installDisk=...
-{ config, pkgs, flakeSrc, diskoPackage, ... }:
+# Используем pkgs.disko (из того же nixpkgs, что и ISO), чтобы не было несовместимости lib на live-системе.
+{ config, pkgs, flakeSrc, ... }:
 
 let
   # Диск по умолчанию для автоустановки (Proxmox: SCSI/IDE → /dev/sda, VirtIO → /dev/vda)
   defaultInstallDisk = "/dev/sda";
 
-  # PATH для скрипта: disko, nix, coreutils и т.д.
+  # PATH для скрипта: disko из nixpkgs (совместим с eval на live), nix, coreutils
   installPath = pkgs.lib.makeBinPath [
     pkgs.gnugrep
     pkgs.util-linux
     pkgs.nix
     pkgs.coreutils
-    diskoPackage
+    pkgs.disko
   ];
 in
 {
@@ -33,8 +34,8 @@ in
     { source = flakeSrc; target = "/nixos-config"; }
   ];
 
-  # disko нужен для автоматической разметки при самоустановке
-  environment.systemPackages = [ diskoPackage ];
+  # disko из nixpkgs (тот же контекст, что и на live — без конфликта lib.match)
+  environment.systemPackages = [ pkgs.disko ];
 
   # Сервис: при загрузке с nixos.autoInstall=1 запускает установку (script — строка, не derivation)
   systemd.services.nixos-auto-install = {
@@ -95,7 +96,7 @@ in
       [[ ! -f "$DISKO_CONFIG" ]] && echo "ERROR: нет файла $DISKO_CONFIG" && exit 1
 
       echo ">>> Running disko (destroy+format+mount)..."
-      cd "$CONFIG_DIR" && nix --extra-experimental-features "nix-command flakes" run .#disko -- --mode destroy,format,mount "$DISKO_CONFIG"
+      disko --mode destroy,format,mount "$DISKO_CONFIG"
 
       echo ">>> Copying flake to /mnt/etc/nixos..."
       mkdir -p /mnt/etc
