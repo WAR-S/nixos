@@ -85,16 +85,17 @@
         ];
       };
 
-    # Файл с путём к nixpkgs в store — для live-системы (NIX_PATH при вызове disko)
-    packages.${system}.nixpkgs-path-file = pkgs.writeText "nixpkgs-path" "${pkgs.path}";
-
-    # Сборка: nix build .#iso — result указывает на каталог с одним файлом .iso (без вложенного iso/)
-    packages.${system}.iso = pkgs.runCommand "nixos-nettop-iso" {
-      src = self.nixosConfigurations.iso.config.system.build.isoImage;
-    } ''
-      mkdir -p $out
-      cp "$src/iso/"*.iso $out/
-    '';
+    packages.${system} = {
+      # Файл с путём к nixpkgs в store — для live-системы (NIX_PATH при вызове disko)
+      nixpkgs-path-file = pkgs.writeText "nixpkgs-path" "${pkgs.path}";
+      # Сборка: nix build .#iso — result указывает на каталог с одним файлом .iso
+      iso = pkgs.runCommand "nixos-nettop-iso" {
+        src = self.nixosConfigurations.iso.config.system.build.isoImage;
+      } ''
+        mkdir -p $out
+        cp "$src/iso/"*.iso $out/
+      '';
+    };
 
   };
 }
