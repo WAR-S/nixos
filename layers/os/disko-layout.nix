@@ -10,8 +10,7 @@
       partitions = {
         bios = {
           size = "1M";
-          type = "EF02";  # BIOS boot partition (GRUB legacy)
-          content = { type = "none"; };
+          type = "EF02";  # BIOS boot partition (GRUB legacy), без ФС
         };
         ESP = {
           size = "512M";
@@ -20,6 +19,7 @@
             type = "filesystem";
             format = "vfat";
             mountpoint = "/boot";
+            mountOptions = [ "umask=0077" ];
           };
         };
         root = {
