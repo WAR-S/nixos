@@ -2,7 +2,7 @@
 
 {
   # Настройка journald: ограничения по месту и сроку хранения логов.
-  systemd.journald = {
+  services.journald = {
     enable = true;
     extraConfig = ''
       SystemMaxUse=500M
