@@ -111,5 +111,6 @@ stdout="off"
 '';
 
   # ASCII‑логотип для neofetch (используем в update-issue через --ascii ...)
-  environment.etc."neofetch/ascii.txt".source = ./comp-logo.txt;
+  # ASCII‑логотип кладём в /etc/neofetch/comp-logo.txt, чтобы имя совпадало с исходником
+  environment.etc."neofetch/comp-logo.txt".source = ./comp-logo.txt;
 }
