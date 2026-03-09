@@ -3,6 +3,8 @@
 {
   systemd.services.update-issue = {
     description = "Generate dynamic issue banner";
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
     serviceConfig = {
       Type = "oneshot";
       User = "root";
@@ -28,8 +30,8 @@
   systemd.timers.update-issue = {
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnBootSec = "10s";
-      OnUnitActiveSec = "30s";
+      OnBootSec = "30s";
+      OnUnitActiveSec = "60s";
     };
   };
 

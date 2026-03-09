@@ -10,5 +10,6 @@
     jq
     yq
     neofetch
+    dmidecode
   ];
 }
