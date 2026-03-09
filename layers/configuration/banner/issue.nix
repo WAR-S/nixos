@@ -10,8 +10,8 @@
         set -euo pipefail
 
         ${pkgs.neofetch}/bin/neofetch \
-          --ascii /etc/neofetch/comp-logo.txt \
           --config /etc/neofetch/config.conf \
+          --ascii /etc/neofetch/comp-logo.txt \
           | ${pkgs.gnused}/bin/sed 's/\x1B\[[0-9;]*[mK]//g' \
           > /run/issue
 

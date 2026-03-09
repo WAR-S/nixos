@@ -93,7 +93,6 @@ memory_display="off"
 battery_display="off"
 disk_display="off"
 image_backend="ascii"
-image_source="auto"
 ascii_distro="auto"
 ascii_colors=(distro)
 ascii_bold="on"
