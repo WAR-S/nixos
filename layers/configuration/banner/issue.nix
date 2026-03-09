@@ -12,9 +12,12 @@
         ${pkgs.neofetch}/bin/neofetch \
           --ascii /etc/neofetch/comp-logo.txt \
           --config /etc/neofetch/config.conf \
-          --stdout \
           | ${pkgs.gnused}/bin/sed 's/\x1B\[[0-9;]*[mK]//g' \
           > /run/issue
+
+        # Перезапускаем getty, чтобы он перечитал новый /run/issue
+        ${pkgs.systemd}/bin/systemctl try-restart getty@tty1.service || true
+        ${pkgs.systemd}/bin/systemctl try-restart serial-getty@ttyS0.service || true
       '';
     };
   };
