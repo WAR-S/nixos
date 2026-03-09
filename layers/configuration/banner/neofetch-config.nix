@@ -9,7 +9,10 @@ print_info() {
     info "Uptime" uptime
 
     info underline
-    prin "Hostname" "$(hostnamectl status | grep hostname |awk '{print $3}')"
+
+    hostname=$(hostname)
+    prin "Hostname" "$hostname"
+
     info "Kernel" kernel
     info "Host" model
     info "Packages" packages
@@ -17,38 +20,54 @@ print_info() {
     info "GPU" gpu
 
     info underline
+
     info "CPU Usage" cpu_usage
     info "Disk" disk
     info "Memory" memory
-    prin "Process count" "$(ps ax | wc -l | tr -d " ")"
+
+    proc_count=$(ps ax | wc -l | tr -d " ")
+    prin "Process count" "$proc_count"
 
     info underline
-    prin "Wifi mode" "$(iw dev | grep wlp0s20f3  -A 10 | grep type | awk '{print $2}')"
+
+    wifi_mode=$(iw dev 2>/dev/null | grep wlp0s20f3 -A10 | grep type | awk '{print $2}')
+    prin "Wifi mode" "$wifi_mode"
+
+    # Разрываем колонку neofetch
+    printf "\n"
+
     echo "Image"
     echo "29_01_2025_arch_linux_v4_universal (for prod only)"
     echo ""
-    echo "IP in VPN tun:"
-    echo "$(ip a l tun0 | awk '/inet/ {print $2}' | head -n 1)"
-    echo ""
-    echo "LAN IP:"
-    echo "$(ip a l eth0 | awk '/inet/ {print $2}' | head -n 1)"
-    echo ""
-    echo "USB Modem IP:"
-    echo "$(ip a l usbmodem0 | awk '/inet/ {print $2}' | head -n 1)"
-    echo ""
-    echo "Wifi client:"
-    echo "$(iw dev wlp2s0 station dump | grep 'Station\|connected')"
-    echo "Interfaces:"
-    echo "$(echo "$(ip addr show | grep 'UP' | grep -i -v -E 'flannel|cni')")"
 
+    vpn_ip=$(ip -4 addr show tun0 2>/dev/null | awk '/inet/ {print $2}' | head -n1)
+    lan_ip=$(ip -4 addr show eth0 2>/dev/null | awk '/inet/ {print $2}' | head -n1)
+    usb_ip=$(ip -4 addr show usbmodem0 2>/dev/null | awk '/inet/ {print $2}' | head -n1)
+
+    echo "VPN IP: $vpn_ip"
+    echo "LAN IP: $lan_ip"
+    echo "USB Modem IP: $usb_ip"
+    echo ""
+
+    wifi_client=$(iw dev wlp2s0 station dump 2>/dev/null | grep -E 'Station|connected')
+    echo "Wifi client:"
+    echo "$wifi_client"
+    echo ""
+
+    interfaces=$(ip addr show | grep 'UP' | grep -viE 'flannel|cni')
+    echo "Interfaces:"
+    echo "$interfaces"
+}
 }
 title_fqdn="off"
 kernel_shorthand="on"
 distro_shorthand="off"
 os_arch="on"
-uptime_shorthand="on"memory_percent="off"
+uptime_shorthand="on"
+memory_percent="off"
 memory_unit="mib"
-package_managers="on"shell_path="off"
+package_managers="on"
+shell_path="off"
 shell_version="on"
 speed_type="bios_limit"
 speed_shorthand="off"
