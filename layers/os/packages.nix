@@ -11,5 +11,6 @@
     yq
     neofetch
     dmidecode
+    hostname
   ];
 }

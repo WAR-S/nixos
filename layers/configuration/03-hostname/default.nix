@@ -16,7 +16,8 @@
         SN="$(${pkgs.dmidecode}/sbin/dmidecode -s system-serial-number 2>/dev/null | head -n1 | tr ' ' '-' | tr -cd 'A-Za-z0-9-')"
 
         if [ -n "$SN" ]; then
-          ${pkgs.systemd}/bin/hostnamectl set-hostname "$SN" || true
+          # На NixOS hostnamectl менять hostname не даёт, используем классический hostname(1)
+          ${pkgs.hostname}/bin/hostname "$SN" || true
         fi
       '';
     };
