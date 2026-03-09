@@ -65,7 +65,7 @@ in
     "vn.pool.ntp.org"
   ];
   # Привязываемся к интерфейсам
-  extraConfig = ''
-    BindToInterface=eth0,usbmodem0
-  '';
+  #extraConfig = ''
+  #  BindToInterface=eth0,usbmodem0
+  #'';
 }
