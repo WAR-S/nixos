@@ -29,11 +29,11 @@
   # Поэтому печатаем динамический баннер из /run/issue.
   systemd.services."getty@tty1".serviceConfig.ExecStart = [
     ""
-    "${pkgs.util-linux}/sbin/agetty --issue-file /run/issue --noclear %I $TERM"
+    "${pkgs.util-linux}/bin/agetty --issue-file /run/issue --noclear %I $TERM"
   ];
 
   systemd.services."serial-getty@ttyS0".serviceConfig.ExecStart = [
     ""
-    "${pkgs.util-linux}/sbin/agetty --issue-file /run/issue --keep-baud 115200,38400,9600 %I $TERM"
+    "${pkgs.util-linux}/bin/agetty --issue-file /run/issue --keep-baud 115200,38400,9600 %I $TERM"
   ];
 }
