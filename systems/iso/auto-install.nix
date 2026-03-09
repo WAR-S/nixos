@@ -28,6 +28,17 @@ in
   # Опционально: только xz (без dict-size даёт чуть больший размер, но быстрее собирается)
   # isoImage.squashfsCompression = "xz";
 
+  # Кладём в ISO заранее runtime-closure для оффлайн-установки:
+  # - disko (включая его зависимости),
+  # - edge-node (готовое системное замыкание),
+  # - nix и nixos-install-tools, чтобы nixos-install и служебные команды не тянулись из кэша.
+  isoImage.storeContents = [
+    diskoPackage
+    edgeNodeToplevel
+    pkgs.nix
+    pkgs.nixos-install-tools
+  ];
+
   # Кладём флейк в корень ISO (на live-системе может быть /iso/nixos-config или /run/iso/nixos-config)
   isoImage.contents = [
     { source = flakeSrc; target = "/nixos-config"; }
