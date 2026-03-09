@@ -14,6 +14,6 @@
     ./users.nix
     ./packages.nix
     
-    ../../configuration
+    ../configuration
   ];
 }
