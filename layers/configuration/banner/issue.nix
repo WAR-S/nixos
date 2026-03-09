@@ -9,6 +9,9 @@
       ExecStart = pkgs.writeShellScript "update-issue" ''
         set -euo pipefail
 
+        # Конфиг neofetch вызывает ip, awk, iw, grep и т.д. — в systemd PATH пустой, подставляем явно
+        export PATH="${pkgs.lib.makeBinPath [ pkgs.iproute2 pkgs.gawk pkgs.coreutils pkgs.gnugrep pkgs.iw pkgs.systemd ]}:$PATH"
+
         ${pkgs.neofetch}/bin/neofetch \
           --config /etc/neofetch/config.conf \
           --ascii /etc/neofetch/comp-logo.txt \
