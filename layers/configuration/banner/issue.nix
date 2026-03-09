@@ -14,7 +14,7 @@
           --config /etc/neofetch/config.conf \
           --stdout \
           | ${pkgs.gnused}/bin/sed 's/\x1B\[[0-9;]*[mK]//g' \
-          | ${pkgs.coreutils}/bin/tee /run/issue > /etc/static/issue
+          > /run/issue
       '';
     };
   };
