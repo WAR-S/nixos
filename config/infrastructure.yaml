@@ -3,3 +3,15 @@ os:
   timezone: UTC
   # Устройство диска на целевом хосте (для disko и разметки)
   diskDevice: /dev/sda
+
+# Опционально: точка доступа Wi‑Fi + DNS/DHCP (dnsmasq). Раскомментируй и задай ssid/psk.
+# wifi:
+#   ap:
+#     interface: wlp2s0
+#     ssid: wifi-nettop-name
+#     psk: "your-wpa-password"   # или положи пароль в файл и укажи pskFile: "/run/secrets/wifi-psk"
+#     domain: domain.local
+#     subnet: 10.10.10.0/24
+#     gateway: 10.10.10.1
+#     dhcpRange: "10.10.10.2,10.10.10.50,12h"
+#     upstreamDns: ["8.8.8.8", "1.1.1.1"]   # опционально, для разрешения внешних имён

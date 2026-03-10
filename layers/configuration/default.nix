@@ -7,6 +7,7 @@
     ./02-journald
     ./03-hostname
     ./04-ssh
+    ./05-wifi-ap
     ./banner
   ];
 }
