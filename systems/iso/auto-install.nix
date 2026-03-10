@@ -15,6 +15,12 @@ let
     pkgs.nixos-install-tools
     diskoPackage
   ];
+
+  # Замыкание сборки для disko: при первом запуске disko строит derivation
+  # (destroy+format+mount), ему нужны gcc/binutils/linux-headers — кладём в образ, чтобы не качать из кэша.
+  diskoBuildClosure = pkgs.runCommand "disko-build-closure" {
+    nativeBuildInputs = with pkgs; [ stdenv.cc binutils linuxHeaders ];
+  } "mkdir -p $out";
 in
 {
   # Параметры ядра по умолчанию: автоустановка при загрузке без правки GRUB
@@ -27,12 +33,6 @@ in
   isoImage.squashfsCompression = "xz -Xdict-size 100%";
   # Опционально: только xz (без dict-size даёт чуть больший размер, но быстрее собирается)
   # isoImage.squashfsCompression = "xz";
-
-  # Замыкание сборки для disko: при первом запуске disko строит derivation
-  # (destroy+format+mount), ему нужны gcc/binutils/linux-headers — кладём в образ, чтобы не качать из кэша.
-  diskoBuildClosure = pkgs.runCommand "disko-build-closure" {
-    nativeBuildInputs = with pkgs; [ stdenv.cc binutils linuxHeaders ];
-  } "mkdir -p $out";
 
   # Кладём в ISO заранее runtime-closure для оффлайн-установки:
   # - disko (включая его зависимости),
