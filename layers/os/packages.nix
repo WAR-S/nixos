@@ -12,5 +12,6 @@
     neofetch
     dmidecode
     hostname
+    openvpn
   ];
 }
