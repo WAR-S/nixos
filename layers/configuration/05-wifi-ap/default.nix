@@ -12,7 +12,6 @@ let
     domain = "domain.local";
     gateway = "10.10.10.1";
     dhcpRange = "10.10.10.2,10.10.10.50,12h";
-    upstreamDns = [ "8.8.8.8" "1.1.1.1" ];
   };
 
   enabled = wifiAp.enable;
@@ -39,6 +38,19 @@ in
       }];
     };
 
+    # Поднять интерфейс и назначить IP до hostapd/dnsmasq (wireless часто остаётся DOWN без этого).
+    systemd.services.wifi-ap-network = {
+      description = "Bring up WiFi AP interface and set IP";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "sys-subsystem-net-devices-${iface}.device" ];
+      before = [ "hostapd.service" "dnsmasq.service" ];
+      serviceConfig.Type = "oneshot";
+      script = ''
+        ${pkgs.iproute2}/bin/ip link set ${iface} up
+        ${pkgs.iproute2}/bin/ip addr add ${gateway}/24 dev ${iface} 2>/dev/null || true
+      '';
+    };
+
     services.hostapd = {
       enable = true;
       radios.${iface} = {
@@ -48,6 +60,16 @@ in
           authentication = auth;
         };
       };
+    };
+
+    # hostapd и dnsmasq — после поднятия интерфейса с IP
+    systemd.services.hostapd = {
+      after = [ "wifi-ap-network.service" ];
+      wants = [ "wifi-ap-network.service" ];
+    };
+    systemd.services.dnsmasq = {
+      after = [ "wifi-ap-network.service" "hostapd.service" ];
+      wants = [ "wifi-ap-network.service" "hostapd.service" ];
     };
 
     services.dnsmasq = {

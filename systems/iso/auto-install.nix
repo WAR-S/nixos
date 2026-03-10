@@ -16,11 +16,15 @@ let
     diskoPackage
   ];
 
-  # Замыкание сборки для disko: при первом запуске disko строит derivation
-  # (destroy+format+mount), ему нужны gcc/binutils/linux-headers — кладём в образ, чтобы не качать из кэша.
-  diskoBuildClosure = pkgs.runCommand "disko-build-closure" {
-    nativeBuildInputs = with pkgs; [ stdenv.cc binutils linuxHeaders ];
-  } "mkdir -p $out";
+  # Замыкание сборки для disko: при первом запуске disko строит derivation на live-системе.
+  # nativeBuildInputs не попадают в замыкание вывода, поэтому явно кладём в вывод ссылки —
+  # тогда gcc/binutils/linux-headers и их зависимости окажутся в store образа.
+  diskoBuildClosure = pkgs.runCommand "disko-build-closure" {} ''
+    mkdir -p $out
+    ln -s ${pkgs.stdenv.cc} $out/cc
+    ln -s ${pkgs.binutils} $out/binutils
+    ln -s ${pkgs.linuxHeaders} $out/linux-headers
+  '';
 in
 {
   # Параметры ядра по умолчанию: автоустановка при загрузке без правки GRUB
@@ -130,8 +134,10 @@ in
       mkdir -p /mnt/etc
       cp -r "$CONFIG_DIR" /mnt/etc/nixos
 
-      echo ">>> Running nixos-install..."
-      nixos-install --flake /mnt/etc/nixos#edge-node --no-root-passwd
+      # Использовать предсобранный toplevel из образа — без переоценки флейка и без загрузок из кэша.
+      TOPLEVEL="$(readlink -f /etc/edge-node-toplevel)"
+      echo ">>> Running nixos-install (system=$TOPLEVEL)..."
+      nixos-install --system "$TOPLEVEL" --no-root-passwd
 
       echo ">>> Done. Rebooting in 5s..."
       sleep 5
