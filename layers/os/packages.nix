@@ -13,5 +13,6 @@
     dmidecode
     hostname
     openvpn
+    pciutils
   ];
 }
