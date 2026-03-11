@@ -18,7 +18,6 @@
     networkmanager
     dnsmasq
     iw
-    wpa_supplicant
     wireless-regdb
   ];
 }
