@@ -15,11 +15,8 @@
     openvpn
     # Debug network lscpu lscpi
     pciutils
-    # Wi‑Fi AP (05-wifi-ap): hostapd, dnsmasq, iw
     networkmanager
     dnsmasq
     iw
-    # удобно отлаживать профили
-    nmcli
   ];
 }
