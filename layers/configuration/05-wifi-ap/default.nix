@@ -55,6 +55,27 @@ in
   # Перезапуск NM при сборке конфигурации, чтобы профиль подхватился.
   systemd.services.NetworkManager.wantedBy = [ "multi-user.target" ];
 
+  systemd.services.wifi-ap-autostart = {
+    description = "Bring up WiFi AP connection via NetworkManager";
+    after = [ "NetworkManager.service" ];
+    wants = [ "NetworkManager.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    script = ''
+      set -e
+      for i in $(seq 1 10); do
+        if ${pkgs.networkmanager}/bin/nmcli con up Wifi; then
+          exit 0
+        fi
+        sleep 3
+      done
+      echo "wifi-ap-autostart: failed to bring up Wifi after retries"
+      exit 1
+    '';
+  };
+
   # Ждём, пока NetworkManager поднимет AP и повесит IP, и только потом стартуем dnsmasq.
   systemd.services.wifi-ap-wait-ip = {
     description = "Wait for WiFi AP IP address";
