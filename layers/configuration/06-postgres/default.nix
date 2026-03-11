@@ -55,12 +55,15 @@ in
     # начальная инициализация: создаём базу/пользователя/расширение
     initialScript = pgInitSql;
   };
+  
   # чтобы директория логов точно существовала
-  systemd.tmpfiles.rules = [
-    "d ${pgDataDir}/logs 0750 postgres postgres -"
-  ];
+  #systemd.tmpfiles.rules = [
+  #  "d ${pgDataDir}/logs 0750 postgres postgres -"
+  #];
+
   systemd.services.postgresql = {
     after = [ "wifi-ap-wait-ip.service" ];
     wants = [ "wifi-ap-wait-ip.service" ];
   };
+
 }
