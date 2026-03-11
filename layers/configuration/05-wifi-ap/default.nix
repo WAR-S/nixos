@@ -19,6 +19,8 @@ let
   gateway = wifiAp.gateway;
   domain = wifiAp.domain;
   dhcpRange = wifiAp.dhcpRange;
+  # Интерфейс в /sys/class/net/ (не в /sys/subsystem/net/devices/ — того может не быть)
+  netDevice = "sys-class-net-${iface}.device";
   auth = if (wifiAp ? pskFile) && wifiAp.pskFile != null then {
     mode = "wpa2-sha256";
     wpaPasswordFile = wifiAp.pskFile;
@@ -39,10 +41,11 @@ in
     };
 
     # Поднять интерфейс и назначить IP до hostapd/dnsmasq (wireless часто остаётся DOWN без этого).
+    # Ждём интерфейс по /sys/class/net/ (udev уже переименовал wlp0s16 → wlp2s0).
     systemd.services.wifi-ap-network = {
       description = "Bring up WiFi AP interface and set IP";
       wantedBy = [ "multi-user.target" ];
-      after = [ "sys-subsystem-net-devices-${iface}.device" ];
+      after = [ netDevice ];
       before = [ "hostapd.service" "dnsmasq.service" ];
       serviceConfig.Type = "oneshot";
       script = ''
@@ -62,8 +65,11 @@ in
       };
     };
 
-    # hostapd и dnsmasq — после поднятия интерфейса с IP
+    # hostapd по умолчанию ждёт sys-subsystem-net-devices-*.device (на части систем его нет).
+    # Переопределяем на sys-class-net-*.device (/sys/class/net/wlp2s0).
     systemd.services.hostapd = {
+      unitConfig.BindsTo = netDevice;
+      unitConfig.After = netDevice;
       after = [ "wifi-ap-network.service" ];
       wants = [ "wifi-ap-network.service" ];
     };
