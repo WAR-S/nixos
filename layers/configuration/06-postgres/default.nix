@@ -20,7 +20,7 @@ in
       host    replication     all             ::1/128                trust
     '';
     settings = {
-      listen_addresses = "10.10.10.1";
+      listen_addresses = lib.mkForce "10.10.10.1";
       max_connections = 100;
       shared_buffers = "128MB";
       dynamic_shared_memory_type = "posix";
