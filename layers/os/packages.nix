@@ -13,10 +13,13 @@
     dmidecode
     hostname
     openvpn
+    # Debug network lscpu lscpi
     pciutils
     # Wi‑Fi AP (05-wifi-ap): hostapd, dnsmasq, iw
-    hostapd
+    networkmanager
     dnsmasq
     iw
+    # удобно отлаживать профили
+    nmcli
   ];
 }

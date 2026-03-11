@@ -2,60 +2,66 @@
 
 let
   iface = "wlp2s0";
+  ssid = "xxx";
+  psk = "qwerty123";
+
   gateway = "10.10.10.1";
   domain = "domain.local";
+  dhcpRange = "10.10.10.2,10.10.10.50,12h";
 in
 {
-  networking.interfaces.${iface}.ipv4.addresses = [
-    {
-      address = gateway;
-      prefixLength = 24;
-    }
-  ];
+  # “Без заморочек”: поднимаем AP через NetworkManager профилем как у тебя.
+  networking.networkmanager.enable = true;
 
-  services.hostapd = {
-    enable = true;
+  environment.etc."NetworkManager/system-connections/Wifi.nmconnection" = {
+    mode = "0600";
+    text = ''
+      [connection]
+      id=Wifi
+      type=wifi
+      interface-name=${iface}
 
-    radios.${iface} = {
-      band = "2g";
-      channel = 6;
-      countryCode = "US";
+      [wifi]
+      band=bg
+      mode=ap
+      ssid=${ssid}
 
-      networks.${iface} = {
-        ssid = "wifi-nettop-name";
+      [wifi-security]
+      key-mgmt=wpa-psk
+      psk=${psk}
+      proto=rsn
+      group=ccmp
+      pairwise=ccmp
 
-        authentication = {
-          mode = "wpa2";
-          wpaPassword = "changeme";
-        };
-      };
-    };
+      [ipv4]
+      address1=${gateway}/24,${gateway}
+      dns=${gateway}
+      dns-search=${domain}
+      method=manual
+
+      [ipv6]
+      method=disabled
+    '';
   };
 
+  # Перезапуск NM при сборке конфигурации, чтобы профиль подхватился.
+  systemd.services.NetworkManager.wantedBy = [ "multi-user.target" ];
+
+  # DNS + DHCP как раньше (можно убрать, если решишь использовать ipv4.method=shared).
   services.dnsmasq = {
     enable = true;
-
     settings = {
-      interface = iface;
-      bind-interfaces = true;
-
-      listen-address = gateway;
-      port = 53;
-
-      domain = domain;
-      address = [ "/.${domain}/${gateway}" ];
-
-      dhcp-range = "10.10.10.2,10.10.10.50,12h";
-
       no-hosts = true;
+      no-resolv = true;
       domain-needed = true;
       bogus-priv = true;
+      interface = iface;
+      listen-address = gateway;
+      port = 53;
+      bind-interfaces = true;
+      domain = domain;
+      address = [ "/.${domain}/${gateway}" ];
+      dhcp-range = dhcpRange;
     };
   };
-
-  # чтобы NetworkManager не трогал интерфейс
-  networking.networkmanager.unmanaged = [ "interface-name:${iface}" ];
-
-  # regulatory domain для iwlwifi
-  networking.wireless.regulatoryDomain = "US";
 }
