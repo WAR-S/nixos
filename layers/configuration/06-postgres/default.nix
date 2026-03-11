@@ -58,18 +58,19 @@ in
 
   # Родительская директория для dataDir: без неё postgresql-setup не может создать /var/lib/postgres/data
   systemd.tmpfiles.rules = [
-    "d /var/lib/postgres 0750 postgres postgres -"
+    "d /var/lib/postgres/data 0750 postgres postgres -"
   ];
 
+  # postgresql-setup создаёт dataDir и делает initdb; postgresql должен стартовать только после него (иначе NAMESPACE: No such file or directory).
   systemd.services.postgresql = {
-    after = [ "wifi-ap-wait-ip.service" ];
+    after = [ "postgresql-setup.service" "wifi-ap-wait-ip.service" ];
+    requires = [ "postgresql-setup.service" ];
     wants = [ "wifi-ap-wait-ip.service" ];
   };
 
-  # postgresql-setup создаёт dataDir; должен запускаться после tmpfiles (чтобы /var/lib/postgres уже был)
   systemd.services.postgresql-setup = {
-    after = [ "systemd-tmpfiles-setup.service" ];
-    wants = [ "systemd-tmpfiles-setup.service" ];
+    after = [ "systemd-tmpfiles-setup.service" "wifi-ap-wait-ip.service" ];
+    wants = [ "systemd-tmpfiles-setup.service" "wifi-ap-wait-ip.service" ];
   };
 
 }
