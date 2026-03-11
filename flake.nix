@@ -82,6 +82,7 @@
         modules = [
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
           "${nixpkgsPath}/nixos/modules/installer/cd-dvd/channel.nix"
+          ./layers/os/locales.nix
           ./layers/os/packages.nix
           ./layers/os/users.nix
           ./systems/iso/auto-install.nix

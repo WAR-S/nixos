@@ -10,6 +10,7 @@
 {
   imports = [
     ./base.nix
+    ./locales.nix
     ./boot.nix
     ./users.nix
     ./packages.nix
