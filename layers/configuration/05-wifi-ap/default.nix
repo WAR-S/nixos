@@ -65,16 +65,13 @@ in
       };
     };
 
-    # hostapd по умолчанию ждёт sys-subsystem-net-devices-*.device (на части систем его нет).
-    # Переопределяем на sys-class-net-*.device (/sys/class/net/wlp2s0); mkForce — конфликт с модулем hostapd.
-#    systemd.services.hostapd = {
-#      unitConfig.BindsTo = lib.mkForce netDevice;
-#      unitConfig.After = lib.mkForce "${netDevice} wifi-ap-network.service";
-#      after = [ "wifi-ap-network.service" ];
-#      wants = [ "wifi-ap-network.service" ];
-#    };
+    # hostapd по умолчанию ждёт sys-subsystem-net-devices-*.device — на этой системе его нет
+    # (/sys/subsystem/net/devices/ отсутствует). Переопределяем на sys-class-net-*.device.
     systemd.services.hostapd = {
-      after = [ "network.target" "wifi-ap-network.service" ];
+      unitConfig.BindsTo = lib.mkForce netDevice;
+      unitConfig.After = lib.mkForce "${netDevice} wifi-ap-network.service";
+      unitConfig.Requires = lib.mkForce netDevice;
+      after = [ "wifi-ap-network.service" ];
       wants = [ "wifi-ap-network.service" ];
     };
     systemd.services.dnsmasq = {
