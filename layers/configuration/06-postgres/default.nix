@@ -1,6 +1,13 @@
 { config, pkgs, lib, ... }:
 let
   pgDataDir = "/var/lib/postgres/data";
+  pgInitSql = pkgs.writeText "postgres-init.sql" ''
+    CREATE ROLE test LOGIN PASSWORD 'qwerty123';
+    CREATE DATABASE test-data-base OWNER test ENCODING 'UTF8'
+      LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' TEMPLATE template1;
+    \connect test-data-base
+    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+  '';
 in
 {
   services.postgresql = {
@@ -44,12 +51,7 @@ in
       "pg_stat_statements.track" = "all";
     };
     # начальная инициализация: создаём базу/пользователя/расширение
-    initialScript = ''
-      CREATE ROLE test LOGIN PASSWORD 'qwerty123';
-      CREATE DATABASE test-data-base OWNER test ENCODING 'UTF8' LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' TEMPLATE template1;
-      \connect test-data-base
-      CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-    '';
+    initialScript = pgInitSql;
   };
   # чтобы директория логов точно существовала
   systemd.tmpfiles.rules = [
