@@ -58,7 +58,6 @@ print_info() {
     echo "Interfaces:"
     echo "$interfaces"
 }
-}
 title_fqdn="off"
 kernel_shorthand="on"
 distro_shorthand="off"

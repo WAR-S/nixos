@@ -34,7 +34,7 @@ in
       max_wal_size = "1GB";
       min_wal_size = "80MB";
       logging_collector = true;
-      log_directory = "${pgDataDir}/logs";
+      log_directory = "logs";  # относительно dataDir, Postgres создаст при первом запуске
       log_filename = "postgresql-%a.log";
       log_rotation_age = "1d";
       log_rotation_size = 0;
@@ -55,15 +55,21 @@ in
     # начальная инициализация: создаём базу/пользователя/расширение
     initialScript = pgInitSql;
   };
-  
-  # чтобы директория логов точно существовала
-  #systemd.tmpfiles.rules = [
-  #  "d ${pgDataDir}/logs 0750 postgres postgres -"
-  #];
+
+  # Родительская директория для dataDir: без неё postgresql-setup не может создать /var/lib/postgres/data
+  systemd.tmpfiles.rules = [
+    "d /var/lib/postgres 0750 postgres postgres -"
+  ];
 
   systemd.services.postgresql = {
     after = [ "wifi-ap-wait-ip.service" ];
     wants = [ "wifi-ap-wait-ip.service" ];
+  };
+
+  # postgresql-setup создаёт dataDir; должен запускаться после tmpfiles (чтобы /var/lib/postgres уже был)
+  systemd.services.postgresql-setup = {
+    after = [ "systemd-tmpfiles-setup.service" ];
+    wants = [ "systemd-tmpfiles-setup.service" ];
   };
 
 }
