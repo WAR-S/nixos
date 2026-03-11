@@ -8,6 +8,7 @@
     ./03-hostname
     ./04-ssh
     ./05-wifi-ap
+    ./06-postgres
     ./banner
   ];
 }
