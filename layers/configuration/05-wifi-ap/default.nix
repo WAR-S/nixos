@@ -19,8 +19,6 @@ let
   gateway = wifiAp.gateway;
   domain = wifiAp.domain;
   dhcpRange = wifiAp.dhcpRange;
-  # Интерфейс в /sys/class/net/ (не в /sys/subsystem/net/devices/ — того может не быть)
-  netDevice = "sys-class-net-${iface}.device";
   auth = if (wifiAp ? pskFile) && wifiAp.pskFile != null then {
     mode = "wpa2-sha256";
     wpaPasswordFile = wifiAp.pskFile;
@@ -41,14 +39,25 @@ in
     };
 
     # Поднять интерфейс и назначить IP до hostapd/dnsmasq (wireless часто остаётся DOWN без этого).
-    # Ждём интерфейс по /sys/class/net/ (udev уже переименовал wlp0s16 → wlp2s0).
+    # Не полагаемся на systemd *.device units: на некоторых системах они могут не стать "ready",
+    # даже если /sys/class/net/<iface> уже существует. Ждём путь напрямую.
     systemd.services.wifi-ap-network = {
       description = "Bring up WiFi AP interface and set IP";
       wantedBy = [ "multi-user.target" ];
-      after = [ netDevice ];
       before = [ "hostapd.service" "dnsmasq.service" ];
       serviceConfig.Type = "oneshot";
       script = ''
+        for _ in $(seq 1 50); do
+          if [ -e "/sys/class/net/${iface}" ]; then
+            break
+          fi
+          sleep 0.2
+        done
+        if [ ! -e "/sys/class/net/${iface}" ]; then
+          echo "ERROR: interface ${iface} not found in /sys/class/net/"
+          exit 1
+        fi
+        ${pkgs.util-linux}/bin/rfkill unblock all 2>/dev/null || true
         ${pkgs.iproute2}/bin/ip link set ${iface} up
         ${pkgs.iproute2}/bin/ip addr add ${gateway}/24 dev ${iface} 2>/dev/null || true
       '';
@@ -65,14 +74,14 @@ in
       };
     };
 
-    # hostapd по умолчанию ждёт sys-subsystem-net-devices-*.device — на этой системе его нет
-    # (/sys/subsystem/net/devices/ отсутствует). Переопределяем на sys-class-net-*.device.
+    # hostapd/dnsmasq запускаем после wifi-ap-network (он поднимает интерфейс и адрес).
+    # Важно: модуль NixOS для hostapd добавляет зависимости через unitConfig на sys-subsystem-net-devices-*.device,
+    # что у тебя таймаутится. Поэтому unitConfig переопределяем полностью.
     systemd.services.hostapd = {
-      unitConfig.BindsTo = lib.mkForce netDevice;
-      unitConfig.After = lib.mkForce "${netDevice} wifi-ap-network.service";
-      unitConfig.Requires = lib.mkForce netDevice;
-      after = [ "wifi-ap-network.service" ];
-      wants = [ "wifi-ap-network.service" ];
+      unitConfig = lib.mkForce {
+        After = "wifi-ap-network.service";
+        Wants = "wifi-ap-network.service";
+      };
     };
     systemd.services.dnsmasq = {
       after = [ "wifi-ap-network.service" "hostapd.service" ];
