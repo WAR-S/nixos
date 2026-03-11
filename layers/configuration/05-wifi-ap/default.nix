@@ -26,11 +26,13 @@ in
       id=Wifi
       type=wifi
       interface-name=${iface}
+      autoconnect=true
 
       [wifi]
       band=bg
       mode=ap
       ssid=${ssid}
+      p2p-disable=1
 
       [wifi-security]
       key-mgmt=wpa-psk
@@ -52,6 +54,31 @@ in
 
   # Перезапуск NM при сборке конфигурации, чтобы профиль подхватился.
   systemd.services.NetworkManager.wantedBy = [ "multi-user.target" ];
+
+  # Ждём, пока NetworkManager поднимет AP и повесит IP, и только потом стартуем dnsmasq.
+  systemd.services.wifi-ap-wait-ip = {
+    description = "Wait for WiFi AP IP address";
+    after = [ "NetworkManager.service" ];
+    wantedBy = [ "multi-user.target" ];
+    before = [ "dnsmasq.service" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      for _ in $(seq 1 150); do
+        if ${pkgs.iproute2}/bin/ip -4 addr show dev ${iface} | ${pkgs.gnugrep}/bin/grep -q "inet ${gateway}/24"; then
+          exit 0
+        fi
+        sleep 0.2
+      done
+      echo "ERROR: ${iface} did not get ${gateway}/24 in time"
+      ${pkgs.iproute2}/bin/ip -4 addr show dev ${iface} || true
+      exit 1
+    '';
+  };
+
+  systemd.services.dnsmasq = {
+    after = [ "wifi-ap-wait-ip.service" ];
+    wants = [ "wifi-ap-wait-ip.service" ];
+  };
 
   # DNS + DHCP как раньше (можно убрать, если решишь использовать ipv4.method=shared).
   services.dnsmasq = {
