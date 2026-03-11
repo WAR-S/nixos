@@ -31,8 +31,6 @@ in
       band=bg
       mode=ap
       ssid=${ssid}
-      # отключаем P2P, иногда мешает поднятию hotspot
-      p2p-disable=1
 
       [wifi-security]
       key-mgmt=wpa-psk
