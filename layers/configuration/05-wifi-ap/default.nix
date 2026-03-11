@@ -78,6 +78,24 @@ in
   systemd.services.dnsmasq = {
     after = [ "wifi-ap-wait-ip.service" ];
     wants = [ "wifi-ap-wait-ip.service" ];
+    serviceConfig.ExecStartPre = lib.mkBefore [
+      (pkgs.writeShellScript "wait-wifi-ap-ip" ''
+        set -e
+        IFACE="${iface}"
+        CIDR="${gateway}/24"
+
+        for _ in $(${pkgs.coreutils}/bin/seq 1 150); do
+          if ${pkgs.iproute2}/bin/ip -4 addr show dev "$IFACE" | ${pkgs.gnugrep}/bin/grep -q "inet $CIDR"; then
+            exit 0
+          fi
+          ${pkgs.coreutils}/bin/sleep 0.2
+        done
+
+        echo "ERROR: $IFACE did not get $CIDR in time"
+        ${pkgs.iproute2}/bin/ip -4 addr show dev "$IFACE" || true
+        exit 1
+      '')
+    ];
   };
 
   # DNS + DHCP как раньше (можно убрать, если решишь использовать ipv4.method=shared).
