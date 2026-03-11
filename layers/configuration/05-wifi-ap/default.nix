@@ -4,6 +4,7 @@ let
   iface = "wlp2s0";
   ssid = "xxx";
   psk = "qwerty123";
+  regdom = "US";
 
   gateway = "10.10.10.1";
   domain = "domain.local";
@@ -12,6 +13,11 @@ in
 {
   # “Без заморочек”: поднимаем AP через NetworkManager профилем как у тебя.
   networking.networkmanager.enable = true;
+  # Регион Wi‑Fi (часто влияет на доступные каналы/AP).
+  hardware.firmware = [ pkgs.wireless-regdb ];
+  boot.extraModprobeConfig = ''
+    options cfg80211 ieee80211_regdom="${regdom}"
+  '';
 
   environment.etc."NetworkManager/system-connections/Wifi.nmconnection" = {
     mode = "0600";
@@ -25,6 +31,8 @@ in
       band=bg
       mode=ap
       ssid=${ssid}
+      # отключаем P2P, иногда мешает поднятию hotspot
+      p2p-disable=1
 
       [wifi-security]
       key-mgmt=wpa-psk
