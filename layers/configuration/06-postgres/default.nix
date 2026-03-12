@@ -59,8 +59,8 @@ in
 
   # Создаём dataDir до старта postgresql (иначе NAMESPACE: No such file or directory). Пустой каталог — pre-start сделает initdb.
   systemd.tmpfiles.rules = [
-    "d /var/lib/postgres 0750 postgres postgres -",
-    "d ${pgDataDir} 0700 postgres postgres -",
+    ''d /var/lib/postgres 0750 postgres postgres -''
+    ''d ${pgDataDir} 0700 postgres postgres -''
   ];
 
   # Бинд на 10.10.10.1 — постгрес стартует после появления IP (без лишней связи с postgresql-setup, чтобы не было цикла).
