@@ -3,9 +3,9 @@ let
   pgDataDir = "/var/lib/postgres/data";
   pgInitSql = pkgs.writeText "postgres-init.sql" ''
     CREATE ROLE test LOGIN PASSWORD 'qwerty123';
-    CREATE DATABASE test-data-base OWNER test ENCODING 'UTF8'
+    CREATE DATABASE "test-data-base" OWNER test ENCODING 'UTF8'
       LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' TEMPLATE template1;
-    \connect test-data-base
+    \connect "test-data-base"
     CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
   '';
 in
@@ -27,7 +27,8 @@ in
       host    replication     all             ::1/128                trust
     '';
     settings = {
-      listen_addresses = lib.mkForce "127.0.0.1";
+      # Строгий бинд только на IP точки доступа
+      listen_addresses = lib.mkForce "10.10.10.1";
       max_connections = 100;
       shared_buffers = "128MB";
       dynamic_shared_memory_type = "posix";
@@ -58,14 +59,15 @@ in
 
   # Создаём dataDir до старта postgresql (иначе NAMESPACE: No such file or directory). Пустой каталог — pre-start сделает initdb.
   systemd.tmpfiles.rules = [
-    ''d /var/lib/postgres 0750 postgres postgres -''
-    ''d ${pgDataDir} 0700 postgres postgres -''
+    ''d /var/lib/postgres 0750 postgres postgres -'',
+    ''d ${pgDataDir} 0700 postgres postgres -'',
   ];
 
   # Бинд на 10.10.10.1 — постгрес стартует после появления IP (без лишней связи с postgresql-setup, чтобы не было цикла).
-  #systemd.services.postgresql = {
-  #  after = [ "wifi-ap-wait-ip.service" ];
-  #  wants = [ "wifi-ap-wait-ip.service" ];
-  #};
+  systemd.services.postgresql = {
+    after = [ "wifi-ap-wait-ip.service" ];
+    wants = [ "wifi-ap-wait-ip.service" ];
+    requires = [ "wifi-ap-wait-ip.service" ];
+  };
 
 }
