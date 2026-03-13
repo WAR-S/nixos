@@ -62,7 +62,7 @@ in
   # - ConfigMap с allow-snippet-annotations / enable-underscores-in-headers
   services.k3s.autoDeployCharts."ingress-nginx" = {
     repo = "https://kubernetes.github.io/ingress-nginx";
-    chart = "ingress-nginx";
+    name = "ingress-nginx";
     # Поставь нужную версию чарта (пример):
     version = "4.11.1";
 
