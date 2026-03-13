@@ -3,18 +3,13 @@
 let
   # IP точки доступа (тот же, что у dnsmasq / NM)
   apIP = "10.10.10.1";
-
-  # Явно пинимся на рабочую минорку k3s, чтобы не схватывать сломанный pkgs.k3s (1.31.* помечен broken).
-  # При необходимости просто поменяй на другую доступную версию, например pkgs.k3s_1_29.
-  k3sPackage = pkgs.k3s_1_30;
 in
 {
   #### K3s server, привязанный к 10.10.10.1
 
   services.k3s = {
     enable = true;
-    role = "server";
-    package = k3sPackage;
+    role = "server"; # используем дефолтный pkgs.k3s без явной версии
 
     nodeName = "k3s-node";
     nodeIP   = apIP;
