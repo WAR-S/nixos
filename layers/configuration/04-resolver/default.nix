@@ -4,31 +4,22 @@
   #### Глобальный резолвер через systemd-resolved
   #### С акцентом на отказоустойчивость: Cloudflare, Google, Quad9.
 
-  services.resolved = {
-    enable = true;
+  # В твоём канале нет ни services.resolved.settings, ни services.resolved.dns,
+  # поэтому используем самый совместимый путь:
+  #
+  # - включаем systemd-resolved
+  # - задаём глобальные DNS через networking.nameservers
 
-    # Старый интерфейс NixOS (dns / fallbackDns), совместимый с твоим каналом.
-    dns = [
-      "1.1.1.1"           # Cloudflare
-      "1.0.0.1"           # Cloudflare
-      "8.8.8.8"           # Google
-      "8.8.4.4"           # Google
-      "9.9.9.9"           # Quad9
-      "149.112.112.112"   # Quad9
-    ];
+  services.resolved.enable = true;
 
-    fallbackDns = [
-      "1.1.1.1"
-      "1.0.0.1"
-      "8.8.8.8"
-      "8.8.4.4"
-      "9.9.9.9"
-      "149.112.112.112"
-    ];
-
-    # При желании можно включить:
-    # dnssec = "allow-downgrade";   # или "true" / "false"
-    # dnsovertls = "opportunistic"; # или "true" / "false"
-  };
+  networking.nameservers = [
+    "1.1.1.1"           # Cloudflare
+    "1.0.0.1"           # Cloudflare
+    "8.8.8.8"           # Google
+    "8.8.4.4"           # Google
+    "9.9.9.9"           # Quad9
+    "149.112.112.112"   # Quad9
+  ];
 }
+
 
