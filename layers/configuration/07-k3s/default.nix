@@ -51,8 +51,10 @@ in
   services.k3s.autoDeployCharts."ingress-nginx" = {
     repo = "https://kubernetes.github.io/ingress-nginx";
     name = "ingress-nginx";
-    # Поставь нужную версию чарта (пример):
+    # Поставь нужную версию чарта.
     version = "4.11.1";
+    # Фиксированный hash для этой версии чарта (берём из сообщения об ошибке hash mismatch).
+    hash = "sha256-o6yI6vwa8fnRyD1lfHq7oX+LMPlfxuOB+PY2CjAd2dw=";
 
     # Значения helm-чарта — то, что ты сейчас делаешь руками kubectl apply/patch
     values = {
