@@ -4,16 +4,9 @@ let
   # IP точки доступа (тот же, что у dnsmasq / NM)
   apIP = "10.10.10.1";
 
-  # Версию k3s можно менять здесь: "1_29", "1_30", и т.д.
-  k3sVersion = "1_31";
-
-  k3sPackage =
-    let
-      attr = "k3s_${k3sVersion}";
-    in
-      if builtins.hasAttr attr pkgs
-      then builtins.getAttr attr pkgs
-      else pkgs.k3s; # fallback на дефолтный k3s, если конкретной версии нет
+  # Явно пинимся на рабочую минорку k3s, чтобы не схватывать сломанный pkgs.k3s (1.31.* помечен broken).
+  # При необходимости просто поменяй на другую доступную версию, например pkgs.k3s_1_29.
+  k3sPackage = pkgs.k3s_1_30;
 in
 {
   #### K3s server, привязанный к 10.10.10.1
