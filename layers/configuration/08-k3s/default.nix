@@ -51,6 +51,8 @@ in
       "--resolv-conf=/run/systemd/resolve/resolv.conf"
       "--kubelet-arg=container-log-max-files=4"
       "--kubelet-arg=container-log-max-size=50Mi"
+      "--kubelet-arg=image-gc-high-threshold=70"
+      "--kubelet-arg=image-gc-low-threshold=50" 
     ];
 
     disable = [ "traefik" "coredns"];

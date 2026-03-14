@@ -1,10 +1,14 @@
-{ ... }:
+{ infra, ... }:
 
+let
+  releaseName = infra."release-name" or "nixos-edge";
+in
 {
   environment.etc."neofetch/config.conf".text = ''
 print_info() {
     info title
     info underline
+    prin "Release" "${releaseName}"
     prin "Date" "$(date)"
     info "Uptime" uptime
 

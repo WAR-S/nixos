@@ -1,4 +1,5 @@
 # Единый конфиг для edge-node. Переменные переиспользуются в layers/configuration/*.
+release-name: "nixos-v0.0.1-14mar2026"
 
 os:
   hostname: edge-node
@@ -55,9 +56,6 @@ k3s:
 # Глобальный DNS (04-resolver): Cloudflare, Google, Quad9.
 resolver:
   nameservers:
-    - "1.1.1.1"
-    - "1.0.0.1"
     - "8.8.8.8"
     - "8.8.4.4"
     - "9.9.9.9"
-    - "149.112.112.112"
