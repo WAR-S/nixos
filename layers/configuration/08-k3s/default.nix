@@ -28,15 +28,23 @@ in
     enable = true;
     role = "server";
     package = k3sPackage;
-    #containerdConfigTemplate = containerdConfigTemplate;
+
+    overrideContainerdAttrs = old: {
+      plugins."io.containerd.grpc.v1.cri" = {
+        container_log = {
+          max_size = "100m";
+          max_files = 3;
+        };
+
+        registry.mirrors."insecure-docker-image-name:5000".endpoint = [
+          "http://insecure-docker-image-name:5000"
+        ];
+      };
+    };    
+
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
 
-#    extraFlags = [
-#      "--node-external-ip=${apIP}"
-#      "--resolv-conf=/run/systemd/resolve/resolv.conf"
-#      "--container-runtime-endpoint=/run/containerd/containerd.sock"
-#    ];
     extraFlags = [
       "--node-external-ip=${apIP}"
       "--resolv-conf=/run/systemd/resolve/resolv.conf"
@@ -49,7 +57,7 @@ in
     after = [
       "network-online.target"
       "ntp-sync.service"
-      "wifi-ap-wait-ip.service"
+      "wifi -ap-wait-ip.service"
     ];
     wants = [
       "network-online.target"
@@ -66,9 +74,10 @@ in
     hash = "sha256-o6yI6vwa8fnRyD1lfHq7oX+LMPlfxuOB+PY2CjAd2dw=";
     values = {
       controller = {
+        hostNetwork = true;
+        dnsPolicy = ClusterFirstWithHostNet;
         service = {
-          type = "LoadBalancer";
-          externalTrafficPolicy = "Local";
+          enabled = false;
         };
         config = {
           "allow-snippet-annotations" = "true";
@@ -77,4 +86,6 @@ in
       };
     };
   };
+
+
 }
