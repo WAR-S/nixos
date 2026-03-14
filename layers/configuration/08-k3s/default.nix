@@ -74,8 +74,8 @@ in
     hash = "sha256-o6yI6vwa8fnRyD1lfHq7oX+LMPlfxuOB+PY2CjAd2dw=";
     values = {
       controller = {
-        "hostNetwork" = true;
-        "dnsPolicy" = "ClusterFirstWithHostNet";
+        hostNetwork = true;
+        dnsPolicy = "ClusterFirstWithHostNet";
         service = {
           enabled = false;
         };
