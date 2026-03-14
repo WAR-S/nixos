@@ -12,7 +12,9 @@ in
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub = {
     enable = true;
-    device = infra.os.diskDevice;   # MBR/BIOS boot partition — для SeaBIOS
+    # nodev = при установке с ISO активация не трогает диск; grub ставится скриптом на выбранный диск.
+    # После nixos-rebuild на хосте grub-install не вызывается (обновляется только grub.cfg в /boot).
+    device = "nodev";
     efiSupport = true;              # установка в ESP — для UEFI
     efiInstallAsRemovable = true;   # EFI/BOOT/BOOTX64.EFI — чтобы Proxmox/VM видели диск без NVRAM
   };
