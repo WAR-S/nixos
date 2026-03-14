@@ -32,11 +32,16 @@ in
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
 
+#    extraFlags = [
+#      "--node-external-ip=${apIP}"
+#      "--resolv-conf=/run/systemd/resolve/resolv.conf"
+#      "--container-runtime-endpoint=/run/containerd/containerd.sock"
+#    ];
     extraFlags = [
       "--node-external-ip=${apIP}"
       "--resolv-conf=/run/systemd/resolve/resolv.conf"
-      "--container-runtime-endpoint=/run/containerd/containerd.sock"
     ];
+
     disable = [ "traefik" "coredns"];
   };
 
