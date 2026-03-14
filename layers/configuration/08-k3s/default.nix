@@ -23,6 +23,18 @@ in
     package = k3sPackage;
     # Не задаём containerdConfigTemplate — используем дефолт, иначе CRI не поднимается.
 
+  containerdConfigTemplate = pkgs.writeText "k3s-containerd-config.toml.tmpl" ''
+    {{ template "base" . }}
+
+    [plugins."io.containerd.grpc.v1.cri".container_log]
+      max_size = "100m"
+      max_files = 3
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
+      endpoint = ["http://insecure-docker-image-name:5000"]
+  '';
+
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
 
