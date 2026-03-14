@@ -14,15 +14,9 @@ let
   containerdConfigTemplate = ''
     {{ template "base" . }}
 
-    [plugins."io.containerd.grpc.v1.cri".cni]
-      conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d"
-      bin_dir = "/var/lib/rancher/k3s/data/current/bin"
-
     [plugins."io.containerd.grpc.v1.cri".container_log]
       max_size = "100m"
       max_files = 3
-    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-      SystemdCgroup = true
     [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
       endpoint = ["http://insecure-docker-image-name:5000"]
   '';
