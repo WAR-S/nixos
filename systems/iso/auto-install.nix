@@ -2,7 +2,7 @@
 # По умолчанию при загрузке автоматически запускается установка на указанный диск.
 # Чтобы загрузиться без установки — в GRUB (e) убери из строки linux: nixos.autoInstall=1 и nixos.installDisk=...
 # ISO рассчитан на офлайн: disko и замыкание edge-node кладём в образ при сборке.
-{ config, pkgs, flakeSrc, diskoPackage, edgeNodeToplevel, infra, ... }:
+{ config, pkgs, lib, flakeSrc, diskoPackage, edgeNodeToplevel, infra, ... }:
 
 let
   defaultInstallDisk = "/dev/sda";
@@ -34,8 +34,9 @@ in
     "nixos.installDisk=${defaultInstallDisk}"
   ];
 
-  # Имя файла ISO на выходе сборки (из config/infrastructure.yaml release-name)
-  isoImage.isoName = "${releaseName}.iso";
+  # Имя файла ISO на выходе сборки (из config/infrastructure.yaml release-name).
+  # В nixpkgs 25.05+ используется image.baseName; из него собирается fileName/isoName.
+  image.baseName = lib.mkForce releaseName;
 
   # Уменьшение размера ISO: более сильное сжатие squashfs
   isoImage.squashfsCompression = "xz -Xdict-size 100%";
