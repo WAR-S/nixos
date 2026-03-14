@@ -5,26 +5,31 @@ let
   k3sCfg = infra.k3s;
   k3sPackage = pkgs.k3s_1_32;
 
-  # Как в rancher/k3s: containerdConfigTemplate — строка, пишется в config.toml.tmpl (см. nixpkgs rancher/default.nix).
-#  containerdConfigTemplate = ''
-#    {{ template "base" . }}
-#
-#    [plugins."io.containerd.grpc.v1.cri".container_log]
-#      max_size = "100m"
-#      max_files = 3
-#
-#    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
-#      endpoint = ["http://insecure-docker-image-name:5000"]
-#  '';
+  # Файл кладём вручную через tmpfiles, не через services.k3s.containerdConfigTemplate.
+  containerdConfigFile = pkgs.writeText "k3s-containerd-config.toml.tmpl" ''
+    {{ template "base" . }}
+
+    [plugins."io.containerd.grpc.v1.cri".container_log]
+      max_size = "100m"
+      max_files = 3
+
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
+      endpoint = ["http://insecure-docker-image-name:5000"]
+  '';
+
+  containerdConfigPath = "/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl";
 in
 {
-  #system.extraDependencies = [ k3sAirgapArchive ];
+  # Файл config.toml.tmpl в каталог k3s (симлинк на store).
+  systemd.tmpfiles.rules = [
+    "d /var/lib/rancher/k3s/agent/etc/containerd 0755 root root -"
+    "L+ ${containerdConfigPath} - - - - ${containerdConfigFile}"
+  ];
 
   services.k3s = {
     enable = true;
     role = "server";
     package = k3sPackage;
-    #containerdConfigTemplate = containerdConfigTemplate;
 
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
