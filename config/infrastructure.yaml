@@ -28,9 +28,29 @@ postgres:
 # K3s (08-k3s): nodeIP = network.ap.gateway.
 k3s:
   nodeName: k3s-node
-  airgap:
-    url: "https://github.com/k3s-io/k3s/releases/download/v1.32.12%2Bk3s1/k3s-airgap-images-amd64.tar.gz"
-    sha256: "3f45abe980b2a6ba9ba8037d9b5a96ab199ce5ddf53c496e99087422d20f0383"
+
+  airgapImages:
+    - url: "https://github.com/k3s-io/k3s/releases/download/v1.32.12%2Bk3s1/k3s-airgap-images-amd64.tar.gz"
+      sha256: "3f45abe980b2a6ba9ba8037d9b5a96ab199ce5ddf53c496e99087422d20f0383"
+
+  charts:
+
+    ingress-nginx:
+      repo: "https://kubernetes.github.io/ingress-nginx"
+      chart: "ingress-nginx"
+      version: "4.11.1"
+      sha256: "sha256-o6yI6vwa8fnRyD1lfHq7oX+LMPlfxuOB+PY2CjAd2dw="
+      namespace: "ingress-nginx"
+
+      values:
+        controller:
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
+          service:
+            enabled: false
+          config:
+            allow-snippet-annotations: "true"
+            enable-underscores-in-headers: "true"
 
 # Глобальный DNS (04-resolver): Cloudflare, Google, Quad9.
 resolver:

@@ -5,6 +5,36 @@ let
   k3sCfg = infra.k3s;
   k3sPackage = pkgs.k3s_1_32;
 
+  # charts из YAML
+  charts =
+    lib.mapAttrs
+      (name: chart: {
+        repo = chart.repo;
+        name = chart.chart;
+        version = chart.version;
+        hash = chart.sha256;
+
+        namespace =
+          if chart ? namespace
+          then chart.namespace
+          else "default";
+
+        values =
+          if chart ? values
+          then chart.values
+          else {};
+      })
+      k3sCfg.charts;
+
+  # airgap images
+  airgapImages =
+    map
+      (img: pkgs.fetchurl {
+        url = img.url;
+        sha256 = img.sha256;
+      })
+      k3sCfg.airgapImages;
+
 in
 {
   services.k3s = {
@@ -23,6 +53,7 @@ in
     ];
 
     disable = [ "traefik" "coredns"];
+    autoDeployCharts = charts;
   };
 
   systemd.services.k3s = lib.mkIf config.services.k3s.enable {
@@ -39,25 +70,10 @@ in
     requires = [ "wifi-ap-wait-ip.service" ];
   };
 
-  services.k3s.autoDeployCharts."ingress-nginx" = {
-    repo = "https://kubernetes.github.io/ingress-nginx";
-    name = "ingress-nginx";
-    version = "4.11.1";
-    hash = "sha256-o6yI6vwa8fnRyD1lfHq7oX+LMPlfxuOB+PY2CjAd2dw=";
-    values = {
-      controller = {
-        hostNetwork = true;
-        dnsPolicy = "ClusterFirstWithHostNet";
-        service = {
-          enabled = false;
-        };
-        config = {
-          "allow-snippet-annotations" = "true";
-          "enable-underscores-in-headers" = "true";
-        };
-      };
-    };
-  };
 
-
+  systemd.tmpfiles.rules =
+    map
+      (img:
+        "L+ /var/lib/rancher/k3s/agent/images/${baseNameOf img} - - - - ${img}")
+      airgapImages;
 }
