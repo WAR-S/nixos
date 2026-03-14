@@ -17,8 +17,6 @@ let
     [plugins."io.containerd.grpc.v1.cri".container_log]
       max_size = "100m"
       max_files = 3
-    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-      SystemdCgroup = true
     [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
       endpoint = ["http://insecure-docker-image-name:5000"]
   '';
