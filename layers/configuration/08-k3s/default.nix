@@ -5,21 +5,17 @@ let
   k3sCfg = infra.k3s;
   k3sPackage = pkgs.k3s_1_32;
 
-#  k3sAirgapArchive = pkgs.fetchurl {
-#    url = k3sCfg.airgap.url;
-#    sha256 = k3sCfg.airgap.sha256;
-#  };
+  # Как в rancher/k3s: containerdConfigTemplate — строка, пишется в config.toml.tmpl (см. nixpkgs rancher/default.nix).
+  containerdConfigTemplate = ''
+    {{ template "base" . }}
 
-  # Опция ожидает string. conf_dir — куда смотреть CNI (k3s пишет в agent path, не в /etc/cni/net.d).
-#  containerdConfigTemplate = ''
-#    {{ template "base" . }}
-#
-#    [plugins."io.containerd.grpc.v1.cri".container_log]
-#      max_size = "100m"
-#      max_files = 3
-#    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
-#      endpoint = ["http://insecure-docker-image-name:5000"]
-#  '';
+    [plugins."io.containerd.grpc.v1.cri".container_log]
+      max_size = "100m"
+      max_files = 3
+
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
+      endpoint = ["http://insecure-docker-image-name:5000"]
+  '';
 in
 {
   #system.extraDependencies = [ k3sAirgapArchive ];
@@ -28,19 +24,7 @@ in
     enable = true;
     role = "server";
     package = k3sPackage;
-
-    overrideContainerdAttrs = old: {
-      plugins."io.containerd.grpc.v1.cri" = {
-        container_log = {
-          max_size = "100m";
-          max_files = 3;
-        };
-
-        registry.mirrors."insecure-docker-image-name:5000".endpoint = [
-          "http://insecure-docker-image-name:5000"
-        ];
-      };
-    };    
+    containerdConfigTemplate = containerdConfigTemplate;
 
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
@@ -57,7 +41,7 @@ in
     after = [
       "network-online.target"
       "ntp-sync.service"
-      "wifi -ap-wait-ip.service"
+      "wifi-ap-wait-ip.service"
     ];
     wants = [
       "network-online.target"
