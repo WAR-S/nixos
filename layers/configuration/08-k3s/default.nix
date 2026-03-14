@@ -22,7 +22,7 @@ let
 #  '';
 in
 {
-  system.extraDependencies = [ k3sAirgapArchive ];
+  #system.extraDependencies = [ k3sAirgapArchive ];
 
   services.k3s = {
     enable = true;
