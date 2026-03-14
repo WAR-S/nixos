@@ -40,8 +40,6 @@ print_info() {
     # Разрываем колонку neofetch
     printf "\n"
 
-    echo "Image"
-    echo "29_01_2025_arch_linux_v4_universal (for prod only)"
     echo ""
 
     vpn_ip=$(ip -4 addr show tun0 2>/dev/null | awk '/inet/ {print $2}' | head -n1)

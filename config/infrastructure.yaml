@@ -1,6 +1,5 @@
 # Единый конфиг для edge-node. Переменные переиспользуются в layers/configuration/*.
 release-name: "nixos-v0.0.1-14mar2026"
-
 os:
   hostname: edge-node
   timezone: UTC
