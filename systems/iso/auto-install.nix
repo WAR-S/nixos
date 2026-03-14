@@ -28,10 +28,9 @@ let
   '';
 in
 {
-  # Параметры ядра по умолчанию: автоустановка при загрузке без правки GRUB
+  # Автоустановка при загрузке. Диск не задаём в cmdline — выбирается скриптом (NVMe или первый не-removable).
   boot.kernelParams = [
     "nixos.autoInstall=1"
-    "nixos.installDisk=${defaultInstallDisk}"
   ];
 
   # Имя файла ISO на выходе сборки (из config/infrastructure.yaml release-name).
@@ -70,13 +69,18 @@ in
   # disko, nix и nixos-install-tools в образе (для скрипта автоустановки)
   environment.systemPackages = [ pkgs.nix pkgs.nixos-install-tools diskoPackage ];
 
-  # Сервис: при загрузке с nixos.autoInstall=1 запускает установку (script — строка, не derivation)
+  # Сервис: при загрузке с nixos.autoInstall=1 запускает установку.
+  # Вывод — в журнал и на консоль (StandardOutput=journal+console).
   systemd.services.nixos-auto-install = {
     description = "NixOS auto-install to disk";
     wantedBy = [ "multi-user.target" ];
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
-    serviceConfig.Type = "oneshot";
+    serviceConfig = {
+      Type = "oneshot";
+      StandardOutput = "journal+console";
+      StandardError = "journal+console";
+    };
     script = ''
       set -e
       export PATH="${installPath}:$PATH"
@@ -91,7 +95,7 @@ in
           esac
         done
       }
-      get_disk() {
+      get_disk_from_cmdline() {
         for param in $(cat /proc/cmdline); do
           case "$param" in
             nixos.installDisk=*)
@@ -100,15 +104,36 @@ in
               ;;
           esac
         done
-        echo "${defaultInstallDisk}"
+      }
+      # Выбор диска: 1) из cmdline nixos.installDisk= 2) первый NVMe 3) первый не-removable (RM=0).
+      # Не ставим на флешку: если только removable — не используем fallback, выходим с ошибкой.
+      detect_install_disk() {
+        local from_cmdline
+        from_cmdline="$(get_disk_from_cmdline)"
+        if [[ -n "$from_cmdline" && -b "$from_cmdline" ]]; then
+          echo "$from_cmdline"
+          return
+        fi
+        local dev
+        for dev in /dev/nvme*n1; do
+          [[ -b "$dev" ]] && echo "$dev" && return
+        done
+        for dev in $(lsblk -d -n -o NAME,RM 2>/dev/null | awk '$2==0 {print $1}'); do
+          [[ -n "$dev" && -b "/dev/$dev" ]] && echo "/dev/$dev" && return
+        done
+        echo ""
       }
 
       AUTO="$(get_cmdline)"
-      DISK="$(get_disk)"
+      DISK="$(detect_install_disk)"
 
       [[ "$AUTO" != "1" && "$AUTO" != "true" ]] && exit 0
 
-      echo "=== NixOS auto-install: disk=$DISK ==="
+      if [[ -z "$DISK" || ! -b "$DISK" ]]; then
+        echo "ERROR: No suitable install disk (no NVMe, no non-removable disk). Add in GRUB: nixos.installDisk=/dev/nvme0n1 or nixos.installDisk=/dev/sda"
+        exit 1
+      fi
+      echo "=== NixOS auto-install: target disk=$DISK (NVMe preferred, then non-removable) ==="
       export DISKO_DEVICE="$DISK"
 
       # Ищем каталог флейка. На NixOS live ISO контент часто в /iso/iso/nixos-config (sr0 смонтирован в /iso).
