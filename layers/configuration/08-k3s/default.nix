@@ -75,7 +75,7 @@ in
     values = {
       controller = {
         hostNetwork = true;
-        dnsPolicy = ClusterFirstWithHostNet;
+        dnsPolicy = "ClusterFirstWithHostNet";
         service = {
           enabled = false;
         };
