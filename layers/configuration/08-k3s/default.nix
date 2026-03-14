@@ -5,19 +5,20 @@ let
   k3sCfg = infra.k3s;
   k3sPackage = pkgs.k3s_1_32;
 
-  # charts из YAML → services.k3s.autoDeployCharts (опция namespace в YAML = targetNamespace в NixOS)
+  # charts из YAML → services.k3s.autoDeployCharts (targetNamespace + createNamespace для не-default namespace)
   charts =
     lib.mapAttrs
-      (name: chart: {
+      (name: chart: let
+        targetNs = if chart ? namespace then chart.namespace else "default";
+      in {
         repo = chart.repo;
         name = chart.chart;
         version = chart.version;
         hash = chart.sha256;
 
-        targetNamespace =
-          if chart ? namespace
-          then chart.namespace
-          else "default";
+        targetNamespace = targetNs;
+        # Создавать namespace, если его нет (иначе helm install падает с "namespaces \"ingress-nginx\" not found")
+        createNamespace = targetNs != "default";
 
         values =
           if chart ? values
