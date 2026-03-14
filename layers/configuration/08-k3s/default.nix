@@ -10,7 +10,8 @@ let
     sha256 = k3sCfg.airgap.sha256;
   };
 
-  containerdConfigTemplate = pkgs.writeText "k3s-containerd-config.toml.tmpl" ''
+  # Содержимое шаблона (опция ожидает string, не path).
+  containerdConfigTemplate = ''
     {{ template "base" . }}
 
     [plugins."io.containerd.grpc.v1.cri".container_log]
