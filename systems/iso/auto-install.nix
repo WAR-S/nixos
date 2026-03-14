@@ -164,10 +164,25 @@ in
       mkdir -p /mnt/etc
       cp -r "$CONFIG_DIR" /mnt/etc/nixos
 
-      # Использовать предсобранный toplevel из образа — без переоценки флейка и без загрузок из кэша.
+      # Чтобы при следующих nixos-rebuild GRUB ставился на этот диск, а не на sda.
+      if [[ -f /mnt/etc/nixos/config/infrastructure.yaml ]]; then
+        sed -i "s|  diskDevice:.*|  diskDevice: $DISK|" /mnt/etc/nixos/config/infrastructure.yaml
+        echo ">>> Patched diskDevice to $DISK in /mnt/etc/nixos/config/infrastructure.yaml"
+      fi
+
+      # Предсобранный toplevel с образа — без nix build.
       TOPLEVEL="$(readlink -f /etc/edge-node-toplevel)"
       echo ">>> Running nixos-install (system=$TOPLEVEL)..."
       nixos-install --system "$TOPLEVEL" --no-root-passwd
+
+      # GRUB в toplevel привязан к /dev/sda; ставим загрузчик на выбранный диск вручную (без nix build).
+      GRUB_INSTALL="$(find "$TOPLEVEL" -path '*/bin/grub-install' -type f 2>/dev/null | head -1)"
+      if [[ -n "$GRUB_INSTALL" ]]; then
+        echo ">>> Installing GRUB to $DISK..."
+        "$GRUB_INSTALL" --boot-directory=/mnt/boot --efi-directory=/mnt/boot "$DISK"
+      else
+        echo ">>> WARNING: grub-install not found in toplevel; boot from $DISK may need manual grub-install"
+      fi
 
       echo ">>> Done. Rebooting in 5s..."
       sleep 5
