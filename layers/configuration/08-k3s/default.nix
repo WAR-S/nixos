@@ -5,10 +5,10 @@ let
   k3sCfg = infra.k3s;
   k3sPackage = pkgs.k3s_1_32;
 
-  k3sAirgapArchive = pkgs.fetchurl {
-    url = k3sCfg.airgap.url;
-    sha256 = k3sCfg.airgap.sha256;
-  };
+  #k3sAirgapArchive = pkgs.fetchurl {
+  #  url = k3sCfg.airgap.url;
+  #  sha256 = k3sCfg.airgap.sha256;
+  #};
 
   # Опция ожидает string, не path — передаём содержимое шаблона.
   containerdConfigTemplate = ''

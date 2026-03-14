@@ -5,6 +5,7 @@
     git
     vim
     curl
+    wget
     htop
     openssh
     jq
