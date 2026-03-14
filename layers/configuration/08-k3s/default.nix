@@ -5,7 +5,7 @@ let
   k3sCfg = infra.k3s;
   k3sPackage = pkgs.k3s_1_32;
 
-  # charts из YAML
+  # charts из YAML → services.k3s.autoDeployCharts (опция namespace в YAML = targetNamespace в NixOS)
   charts =
     lib.mapAttrs
       (name: chart: {
@@ -14,7 +14,7 @@ let
         version = chart.version;
         hash = chart.sha256;
 
-        namespace =
+        targetNamespace =
           if chart ? namespace
           then chart.namespace
           else "default";
