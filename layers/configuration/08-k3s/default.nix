@@ -23,7 +23,9 @@ let
   '';
 in
 {
-  environment.systemPackages = [ k3sAirgapArchive ];
+  # Архив — один файл; в systemPackages его класть нельзя (buildEnv не умеет файлы).
+  # extraDependencies добавляет путь в замыкание системы — архив скачается при сборке ISO.
+  system.extraDependencies = [ k3sAirgapArchive ];
 
   services.k3s = {
     enable = true;
