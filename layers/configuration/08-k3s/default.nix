@@ -10,6 +10,17 @@ let
     sha256 = k3sCfg.airgap.sha256;
   };
 
+  containerdConfigTemplate = pkgs.writeText "k3s-containerd-config.toml.tmpl" ''
+    {{ template "base" . }}
+
+    [plugins."io.containerd.grpc.v1.cri".container_log]
+      max_size = "100m"
+      max_files = 3
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
+      endpoint = ["http://insecure-docker-image-name:5000"]
+  '';
   # Кастомный шаблон отключён: секция container_log ломала CRI (unknown service runtime.v1.RuntimeService).
   # Зеркало реестра и лимиты логов можно добавить позже в формате для твоей версии containerd.
   # containerdConfigTemplate = null;  # по умолчанию — дефолтный конфиг k3s
@@ -23,18 +34,7 @@ in
     package = k3sPackage;
     # Не задаём containerdConfigTemplate — используем дефолт, иначе CRI не поднимается.
 
-  containerdConfigTemplate = pkgs.writeText "k3s-containerd-config.toml.tmpl" ''
-    {{ template "base" . }}
-
-    [plugins."io.containerd.grpc.v1.cri".container_log]
-      max_size = "100m"
-      max_files = 3
-    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-      SystemdCgroup = true
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
-      endpoint = ["http://insecure-docker-image-name:5000"]
-  '';
-
+    containerdConfigTemplate = containerdConfigTemplate;
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
 
