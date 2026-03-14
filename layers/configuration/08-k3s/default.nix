@@ -10,29 +10,7 @@ let
     sha256 = k3sCfg.airgap.sha256;
   };
 
-  k3sCniNetDir = "/var/lib/rancher/k3s/agent/etc/cni/net.d";
-
-  # Минимальный CNI conflist, чтобы net.d не был пуст при старте containerd (CRI иначе падает с "no network config found").
-  minimalFlannelConflist = pkgs.writeText "10-flannel.conflist" ''
-    {
-      "name": "cbr0",
-      "cniVersion": "0.4.0",
-      "plugins": [
-        {
-          "type": "flannel",
-          "delegate": {
-            "hairpinMode": true,
-            "isDefaultGateway": true
-          }
-        },
-        {
-          "type": "portmap",
-          "capabilities": { "portMappings": true }
-        }
-      ]
-    }
-  '';
-
+  # Опция ожидает string. conf_dir — куда смотреть CNI (k3s пишет в agent path, не в /etc/cni/net.d).
   containerdConfigTemplate = ''
     {{ template "base" . }}
 
@@ -46,29 +24,6 @@ in
 {
   system.extraDependencies = [ k3sAirgapArchive ];
 
-  # Каталог CNI до старта k3s; симлинк чтобы /etc/cni/net.d и k3s использовали один путь.
-  systemd.tmpfiles.rules = [
-    "d ${k3sCniNetDir} 0755 root root -"
-  ];
-
-  systemd.services.k3s-cni-dirs = {
-    description = "Create CNI dir and symlink for k3s/containerd";
-    before = [ "k3s.service" ];
-    requiredBy = [ "k3s.service" ];
-    serviceConfig.Type = "oneshot";
-    script = ''
-      ${pkgs.coreutils}/bin/mkdir -p ${k3sCniNetDir}
-      ${pkgs.coreutils}/bin/mkdir -p /etc/cni
-      if [ ! -e /etc/cni/net.d ]; then
-        ${pkgs.coreutils}/bin/ln -sfn ${k3sCniNetDir} /etc/cni/net.d
-      fi
-      # Чтобы CRI не падал при пустом net.d, кладём минимальный conflist; k3s при необходимости перезапишет.
-      if [ ! -f ${k3sCniNetDir}/10-flannel.conflist ]; then
-        ${pkgs.coreutils}/bin/cp -f ${minimalFlannelConflist} ${k3sCniNetDir}/10-flannel.conflist
-      fi
-    '';
-  };
-
   services.k3s = {
     enable = true;
     role = "server";
@@ -80,13 +35,13 @@ in
     extraFlags = [
       "--node-external-ip=${apIP}"
       "--resolv-conf=/run/systemd/resolve/resolv.conf"
+      "--container-runtime-endpoint=/run/containerd/containerd.sock"
     ];
     disable = [ "traefik" "coredns" ];
   };
 
   systemd.services.k3s = lib.mkIf config.services.k3s.enable {
     after = [
-      "k3s-cni-dirs.service"
       "network-online.target"
       "ntp-sync.service"
       "wifi-ap-wait-ip.service"
@@ -96,7 +51,7 @@ in
       "ntp-sync.service"
       "wifi-ap-wait-ip.service"
     ];
-    requires = [ "wifi-ap-wait-ip.service" "k3s-cni-dirs.service" ];
+    requires = [ "wifi-ap-wait-ip.service" ];
   };
 
   services.k3s.autoDeployCharts."ingress-nginx" = {
