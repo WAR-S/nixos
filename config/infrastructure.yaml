@@ -1,17 +1,43 @@
+# Единый конфиг для edge-node. Переменные переиспользуются в layers/configuration/*.
+
 os:
   hostname: edge-node
   timezone: UTC
-  # Устройство диска на целевом хосте (для disko и разметки)
   diskDevice: /dev/sda
 
-# Опционально: точка доступа Wi‑Fi + DNS/DHCP (dnsmasq). Раскомментируй и задай ssid/psk.
-# wifi:
-#   ap:
-#     interface: wlp2s0
-#     ssid: wifi-nettop-name
-#     psk: "your-wpa-password"   # или положи пароль в файл и укажи pskFile: "/run/secrets/wifi-psk"
-#     domain: domain.local
-#     subnet: 10.10.10.0/24
-#     gateway: 10.10.10.1
-#     dhcpRange: "10.10.10.2,10.10.10.50,12h"
-#     upstreamDns: ["8.8.8.8", "1.1.1.1"]   # опционально, для разрешения внешних имён
+# Точка доступа Wi‑Fi + dnsmasq (06-wifi-ap). Тот же gateway используется в 07-postgres и 08-k3s.
+network:
+  ap:
+    interface: wlp2s0
+    gateway: "10.10.10.1"
+    subnet: "10.10.10.0/24"
+    domain: domain.local
+    dhcpRange: "10.10.10.2,10.10.10.50,12h"
+  wifi:
+    ssid: xxx
+    psk: "qwerty123"
+    regdom: US
+
+# PostgreSQL (07-postgres): слушает на network.ap.gateway.
+postgres:
+  listenAddress: "10.10.10.1"
+  database: "test-data-base"
+  user: test
+  password: "qwerty123"
+
+# K3s (08-k3s): nodeIP = network.ap.gateway.
+k3s:
+  nodeName: k3s-node
+  airgap:
+    url: "https://github.com/k3s-io/k3s/releases/download/v1.32.12%2Bk3s1/k3s-airgap-images-amd64.tar.gz"
+    sha256: "3f45abe980b2a6ba9ba8037d9b5a96ab199ce5ddf53c496e99087422d20f0383"
+
+# Глобальный DNS (04-resolver): Cloudflare, Google, Quad9.
+resolver:
+  nameservers:
+    - "1.1.1.1"
+    - "1.0.0.1"
+    - "8.8.8.8"
+    - "8.8.4.4"
+    - "9.9.9.9"
+    - "149.112.112.112"

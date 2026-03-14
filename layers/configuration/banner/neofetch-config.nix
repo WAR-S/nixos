@@ -30,7 +30,7 @@ print_info() {
 
     info underline
 
-    wifi_mode=$(iw dev 2>/dev/null | grep wlp0s20f3 -A10 | grep type | awk '{print $2}')
+    wifi_mode=$(iw dev 2>/dev/null | grep wlp2s0 -A10 | grep type | awk '{print $2}')
     prin "Wifi mode" "$wifi_mode"
 
     # Разрываем колонку neofetch

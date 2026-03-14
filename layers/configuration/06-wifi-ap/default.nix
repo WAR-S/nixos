@@ -1,19 +1,18 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, infra, ... }:
 
 let
-  iface = "wlp2s0";
-  ssid = "xxx";
-  psk = "qwerty123";
-  regdom = "US";
-
-  gateway = "10.10.10.1";
-  domain = "domain.local";
-  dhcpRange = "10.10.10.2,10.10.10.50,12h";
+  ap = infra.network.ap;
+  wifi = infra.network.wifi;
+  iface = ap.interface;
+  gateway = ap.gateway;
+  domain = ap.domain;
+  dhcpRange = ap.dhcpRange;
+  ssid = wifi.ssid;
+  psk = wifi.psk;
+  regdom = wifi.regdom;
 in
 {
-  # “Без заморочек”: поднимаем AP через NetworkManager профилем как у тебя.
   networking.networkmanager.enable = true;
-  # Регион Wi‑Fi (часто влияет на доступные каналы/AP).
   hardware.firmware = [ pkgs.wireless-regdb ];
   boot.extraModprobeConfig = ''
     options cfg80211 ieee80211_regdom="${regdom}"
@@ -52,7 +51,6 @@ in
     '';
   };
 
-  # Перезапуск NM при сборке конфигурации, чтобы профиль подхватился.
   systemd.services.NetworkManager.wantedBy = [ "multi-user.target" ];
 
   systemd.services.wifi-ap-autostart = {
@@ -60,15 +58,11 @@ in
     after = [ "NetworkManager.service" ];
     wants = [ "NetworkManager.service" ];
     wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-    };
+    serviceConfig = { Type = "oneshot"; };
     script = ''
       set -e
       for i in $(seq 1 10); do
-        if ${pkgs.networkmanager}/bin/nmcli con up Wifi; then
-          exit 0
-        fi
+        if ${pkgs.networkmanager}/bin/nmcli con up Wifi; then exit 0; fi
         sleep 3
       done
       echo "wifi-ap-autostart: failed to bring up Wifi after retries"
@@ -76,7 +70,6 @@ in
     '';
   };
 
-  # Ждём, пока NetworkManager поднимет AP и повесит IP, и только потом стартуем dnsmasq.
   systemd.services.wifi-ap-wait-ip = {
     description = "Wait for WiFi AP IP address";
     after = [ "NetworkManager.service" ];
@@ -102,24 +95,19 @@ in
     serviceConfig.ExecStartPre = lib.mkBefore [
       (pkgs.writeShellScript "wait-wifi-ap-ip" ''
         set -e
-        IFACE="${iface}"
-        CIDR="${gateway}/24"
-
         for _ in $(${pkgs.coreutils}/bin/seq 1 150); do
-          if ${pkgs.iproute2}/bin/ip -4 addr show dev "$IFACE" | ${pkgs.gnugrep}/bin/grep -q "inet $CIDR"; then
+          if ${pkgs.iproute2}/bin/ip -4 addr show dev "${iface}" | ${pkgs.gnugrep}/bin/grep -q "inet ${gateway}/24"; then
             exit 0
           fi
           ${pkgs.coreutils}/bin/sleep 0.2
         done
-
-        echo "ERROR: $IFACE did not get $CIDR in time"
-        ${pkgs.iproute2}/bin/ip -4 addr show dev "$IFACE" || true
+        echo "ERROR: ${iface} did not get ${gateway}/24 in time"
+        ${pkgs.iproute2}/bin/ip -4 addr show dev "${iface}" || true
         exit 1
       '')
     ];
   };
 
-  # DNS + DHCP как раньше (можно убрать, если решишь использовать ipv4.method=shared).
   services.dnsmasq = {
     enable = true;
     settings = {
