@@ -6,16 +6,16 @@ let
   k3sPackage = pkgs.k3s_1_32;
 
   # Как в rancher/k3s: containerdConfigTemplate — строка, пишется в config.toml.tmpl (см. nixpkgs rancher/default.nix).
-  containerdConfigTemplate = ''
-    {{ template "base" . }}
-
-    [plugins."io.containerd.grpc.v1.cri".container_log]
-      max_size = "100m"
-      max_files = 3
-
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
-      endpoint = ["http://insecure-docker-image-name:5000"]
-  '';
+#  containerdConfigTemplate = ''
+#    {{ template "base" . }}
+#
+#    [plugins."io.containerd.grpc.v1.cri".container_log]
+#      max_size = "100m"
+#      max_files = 3
+#
+#    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."insecure-docker-image-name:5000"]
+#      endpoint = ["http://insecure-docker-image-name:5000"]
+#  '';
 in
 {
   #system.extraDependencies = [ k3sAirgapArchive ];
@@ -24,7 +24,7 @@ in
     enable = true;
     role = "server";
     package = k3sPackage;
-    containerdConfigTemplate = containerdConfigTemplate;
+    #containerdConfigTemplate = containerdConfigTemplate;
 
     nodeName = k3sCfg.nodeName;
     nodeIP = apIP;
