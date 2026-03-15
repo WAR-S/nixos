@@ -9,12 +9,18 @@ in
 {
   boot.kernelModules = [ "nvme" "nvme_core" ];
   boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" "nvme" "nvme_core" ];
-  # Дам udev время создать узлы устройств (nvme0n1p3 и т.д.) до монтирования root.
+  # Явно грузим NVMe и ждём появления раздела (в initrd порядок может быть таким, что узлы ещё не созданы).
   boot.initrd.preDeviceCommands = ''
-    echo "Waiting for block devices (udev settle, 120s)..."
-    udevadm settle --timeout=120
-    echo "Root device: ${rootPart}"
-    [ -b "${rootPart}" ] || { echo "ERROR: ${rootPart} not found"; exit 1; }
+    echo "Loading NVMe, waiting for ${rootPart}..."
+    modprobe nvme_core 2>/dev/null || true
+    modprobe nvme 2>/dev/null || true
+    i=0
+    while [ "$i" -lt 120 ]; do
+      [ -b "${rootPart}" ] && { echo "Found ${rootPart}"; break; }
+      sleep 1
+      i=$((i + 1))
+    done
+    [ -b "${rootPart}" ] || { echo "ERROR: ${rootPart} not found after 120s"; exit 1; }
   '';
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub = {
