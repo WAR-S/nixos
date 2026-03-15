@@ -1,28 +1,20 @@
-# Загрузчик (GRUB: UEFI + SeaBIOS) + разметка диска (disko). fileSystems подставляет disko автоматически.
-# Монтирование по устройству+номеру раздела (без UUID и без by-partlabel — в initrd udev может не успеть).
-# Порядок разделов: 1=bios, 2=ESP(/boot), 3=root(/)
+# Загрузчик (GRUB: UEFI + SeaBIOS) + разметка диска (disko).
+# Монтирование по LABEL — один toplevel для любого диска (NVMe/SATA); метки заданы в disko-layout.
 { infra, lib, ... }:
 
-let
-  # NVMe: nvme0n1p2; SCSI/SATA: sda2, vda2
-  part = n: if lib.hasInfix "nvme" infra.os.diskDevice then "${infra.os.diskDevice}p${toString n}" else "${infra.os.diskDevice}${toString n}";
-in
 {
   boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" ];
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub = {
     enable = true;
-    # nodev = при установке с ISO активация не трогает диск; grub ставится скриптом на выбранный диск.
-    # После nixos-rebuild на хосте grub-install не вызывается (обновляется только grub.cfg в /boot).
     device = "nodev";
-    efiSupport = true;              # установка в ESP — для UEFI
-    efiInstallAsRemovable = true;   # EFI/BOOT/BOOTX64.EFI — чтобы Proxmox/VM видели диск без NVRAM
+    efiSupport = true;
+    efiInstallAsRemovable = true;
   };
-  boot.loader.efi.canTouchEfiVariables = false;  # требуется при efiInstallAsRemovable = true
+  boot.loader.efi.canTouchEfiVariables = false;
 
-  # Устройства разделов доступны в initrd без udev
-  fileSystems."/".device = lib.mkForce (part 3);
-  fileSystems."/boot".device = lib.mkForce (part 2);
+  fileSystems."/".device = lib.mkForce "/dev/disk/by-label/nixos";
+  fileSystems."/boot".device = lib.mkForce "/dev/disk/by-label/NIXOS_BOOT";
 
   disko.devices = import ./disko-layout.nix { device = infra.os.diskDevice; };
 }

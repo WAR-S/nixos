@@ -3,7 +3,7 @@ release-name: "nixos-v0.0.1-14mar2026"
 os:
   hostname: edge-node
   timezone: UTC
-  diskDevice: /dev/sda
+  diskDevice: /dev/nvme0n1
 
 # Точка доступа Wi‑Fi + dnsmasq (06-wifi-ap). Тот же gateway используется в 07-postgres и 08-k3s.
 network:
