@@ -168,14 +168,6 @@ in
       echo ">>> Running nixos-install (system=$TOPLEVEL)..."
       nixos-install --system "$TOPLEVEL" --no-root-passwd
 
-      # GRUB ставим на выбранный диск; для UEFI нужны модули x86_64-efi (--directory).
-      GRUB_INSTALL="$(find "$TOPLEVEL" -path '*/bin/grub-install' -type f 2>/dev/null | head -1)"
-      GRUB_EFI_DIR="$(find "$TOPLEVEL" -path '*/lib/grub/x86_64-efi/modinfo.sh' 2>/dev/null | head -1 | xargs dirname)"
-      if [[ -n "$GRUB_INSTALL" && -n "$GRUB_EFI_DIR" ]]; then
-        echo ">>> Installing GRUB to $DISK..."
-        "$GRUB_INSTALL" --boot-directory=/mnt/boot --efi-directory=/mnt/boot --directory="$GRUB_EFI_DIR" "$DISK"
-      fi
-
       echo ">>> Done. Rebooting in 5s..."
       sleep 5
       reboot

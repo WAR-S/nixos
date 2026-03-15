@@ -7,7 +7,7 @@
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub = {
     enable = true;
-    device = "nodev";
+    device = infra.os.diskDevice;
     efiSupport = true;
     efiInstallAsRemovable = true;
   };
