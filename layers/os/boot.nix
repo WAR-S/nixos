@@ -8,12 +8,12 @@ let
 in
 {
   boot.kernelModules = [ "nvme" "nvme_core" ];
+  # Грузить NVMe сразу при старте initrd (до preDeviceCommands и до монтирования root).
+  boot.initrd.kernelModules = [ "nvme_core" "nvme" ];
   boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" "nvme" "nvme_core" ];
-  # Явно грузим NVMe и ждём появления раздела (в initrd порядок может быть таким, что узлы ещё не созданы).
+  # Ждём появления раздела (nvme уже загружен через kernelModules).
   boot.initrd.preDeviceCommands = ''
-    echo "Loading NVMe, waiting for ${rootPart}..."
-    modprobe nvme_core 2>/dev/null || true
-    modprobe nvme 2>/dev/null || true
+    echo "Waiting for ${rootPart}..."
     i=0
     while [ "$i" -lt 120 ]; do
       [ -b "${rootPart}" ] && { echo "Found ${rootPart}"; break; }
