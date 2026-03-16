@@ -17,9 +17,9 @@ in
     enable = true;
     device = infra.os.diskDevice;
     efiSupport = true;
-    efiInstallAsRemovable = true;  # fallback EFI/BOOT/BOOTX64.EFI для VM/Proxmox
+    efiInstallAsRemovable = false;
   };
-  # true — писать загрузочную запись в NVRAM, чтобы не выбирать диск в BIOS каждый раз.
+  # Писать загрузочную запись в NVRAM, чтобы не выбирать диск в BIOS каждый раз.
   boot.loader.efi.canTouchEfiVariables = true;
 
   fileSystems."/".device = lib.mkForce "/dev/disk/by-label/nixos";
