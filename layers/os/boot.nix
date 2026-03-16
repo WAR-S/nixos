@@ -1,5 +1,5 @@
 # Загрузчик (GRUB: UEFI + SeaBIOS) + разметка диска (disko).
-# Root по LABEL — ядро находит раздел сам (без udev и без ожидания /dev/nvme0n1p3).
+# Root по by-label; ждём udev в preMountCommands, чтобы симлинк существовал до монтирования.
 { infra, lib, ... }:
 
 let
@@ -9,22 +9,30 @@ in
   boot.kernelModules = [ "nvme" "nvme_core" ];
   boot.initrd.kernelModules = [ "nvme_core" "nvme" ];
   boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" "nvme" "nvme_core" ];
-  # root=LABEL=nixos — ядро ищет раздел с меткой, не зависит от udev и имени устройства.
-  boot.kernelParams = [ "root=LABEL=nixos" "rootfstype=ext4" ];
+  # Если stage 1 падает (root не монтируется и т.п.) — провалиться в shell вместо мгновенной ошибки.
+  boot.kernelParams = [ "boot.shell_on_fail" ];
+  # Дождаться udev перед монтированием root — тогда /dev/disk/by-label/nixos уже есть.
+  boot.initrd.preMountCommands = ''
+    echo "Waiting for udev (by-label)..."
+    udevadm settle --timeout=120
+  '';
 
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub = {
     enable = true;
     device = infra.os.diskDevice;
     efiSupport = true;
-    efiInstallAsRemovable = true;
+    efiInstallAsRemovable = true;  # fallback EFI/BOOT/BOOTX64.EFI для VM/Proxmox
   };
-  boot.loader.efi.canTouchEfiVariables = false;
+  # true — писать загрузочную запись в NVRAM, чтобы не выбирать диск в BIOS каждый раз.
+  boot.loader.efi.canTouchEfiVariables = true;
 
-  fileSystems."/".device = lib.mkForce "LABEL=nixos";
+  fileSystems."/".device = lib.mkForce "/dev/disk/by-label/nixos";
   fileSystems."/".fsType = lib.mkForce "ext4";
-  fileSystems."/boot".device = lib.mkForce "LABEL=NIXOS_BOOT";
+  fileSystems."/".options = [ "x-systemd.device-timeout=120" ];
+  fileSystems."/boot".device = lib.mkForce "/dev/disk/by-label/NIXOS_BOOT";
   fileSystems."/boot".fsType = lib.mkForce "vfat";
+  fileSystems."/boot".options = [ "x-systemd.device-timeout=120" ];
 
   disko.devices = import ./disko-layout.nix { device = infra.os.diskDevice; };
 }
