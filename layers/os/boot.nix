@@ -11,11 +11,6 @@ in
   boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" "nvme" "nvme_core" ];
   # Если stage 1 падает (root не монтируется и т.п.) — провалиться в shell вместо мгновенной ошибки.
   boot.kernelParams = [ "boot.shell_on_fail" ];
-  # Дождаться udev перед монтированием root — тогда /dev/disk/by-label/nixos уже есть.
-  boot.initrd.preMountCommands = ''
-    echo "Waiting for udev (by-label)..."
-    udevadm settle --timeout=120
-  '';
 
   boot.loader.systemd-boot.enable = false;
   boot.loader.grub = {
