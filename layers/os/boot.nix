@@ -6,9 +6,13 @@ let
   part = n: if lib.hasInfix "nvme" infra.os.diskDevice then "${infra.os.diskDevice}p${toString n}" else "${infra.os.diskDevice}${toString n}";
 in
 {
-  boot.kernelModules = [ "nvme" "nvme_core" ];
-  boot.initrd.kernelModules = [ "nvme_core" "nvme" ];
-  boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod" "nvme" "nvme_core" ];
+  boot.kernelModules = [ "nvme" "nvme_core" "nvme_pci" ];
+
+  boot.initrd.kernelModules = [ "nvme" "nvme_core" "nvme_pci" ];
+  boot.initrd.availableKernelModules =
+    [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod" "sr_mod"
+      "nvme" "nvme_core" "nvme_pci"
+    ];  
   # Если stage 1 падает (root не монтируется и т.п.) — провалиться в shell вместо мгновенной ошибки.
   boot.kernelParams = [ "boot.shell_on_fail" ];
 
