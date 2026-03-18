@@ -5,6 +5,13 @@ os:
   timezone: UTC
   diskDevice: /dev/nvme0n1
 
+# Глобальный DNS (04-resolver): Cloudflare, Google, Quad9.
+resolver:
+  nameservers:
+    - "8.8.8.8"
+    - "8.8.4.4"
+    - "9.9.9.9"
+
 # Точка доступа Wi‑Fi + dnsmasq (06-wifi-ap). Тот же gateway используется в 07-postgres и 08-k3s.
 network:
   ap:
@@ -52,9 +59,34 @@ k3s:
             allow-snippet-annotations: "true"
             enable-underscores-in-headers: "true"
 
-# Глобальный DNS (04-resolver): Cloudflare, Google, Quad9.
-resolver:
-  nameservers:
-    - "8.8.8.8"
-    - "8.8.4.4"
-    - "9.9.9.9"
+# OpenVPN client (09-vpn). Секреты лучше хранить отдельными файлами и подставлять путями.
+vpn:
+  openvpn:
+    enable: true
+    remoteHost: "vpn.example.lan"
+    remotePort: 1194
+    routeNet: "10.61.0.0"
+    routeMask: "255.255.0.0"
+    # caFile: "/etc/openvpn/ca.crt"
+    # certFile: "/etc/openvpn/client.crt"
+    # keyFile: "/etc/openvpn/client.key"
+    # tlsCryptFile: "/etc/openvpn/tls-crypt.key"
+    # tlsAuthFile: "/etc/openvpn/tls-auth.key"
+    # Или можно прямо сюда (попадёт в /nix/store):
+    # caInline: |
+    #   -----BEGIN CERTIFICATE-----
+    #   ...
+    #   -----END CERTIFICATE-----
+    # certInline: |
+    #   -----BEGIN CERTIFICATE-----
+    #   ...
+    #   -----END CERTIFICATE-----
+    # keyInline: |
+    #   -----BEGIN PRIVATE KEY-----
+    #   ...
+    #   -----END PRIVATE KEY-----
+    # tlsCryptInline: |
+    #   -----BEGIN OpenVPN Static key V1-----
+    #   ...
+    #   -----END OpenVPN Static key V1-----
+

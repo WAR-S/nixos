@@ -11,6 +11,7 @@
     ./06-wifi-ap
     ./07-postgres
     ./08-k3s 
+    ./09-vpn
     ./banner
   ];
 }

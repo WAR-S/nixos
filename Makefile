@@ -15,6 +15,17 @@ iso:
 	$(NIX) build .#iso
 
 iso-copy:
+	@# Fetch OpenVPN secrets from Vault (optional).
+	@# Provide env vars:
+	@#   VAULT_ADDR=https://vault.example.lan
+	@#   VAULT_TOKEN=...
+	@#   VAULT_PATH=cubbyhole/openvpn   (optional)
+	@if grep -qE '^[[:space:]]*vpn:[[:space:]]*$$' config/infrastructure.yaml; then \
+	  echo ">>> Fetching OpenVPN secrets from Vault..."; \
+	  ./scripts/fetch-openvpn-from-vault.sh; \
+	else \
+	  echo ">>> OpenVPN Vault fetch skipped (no vpn section)."; \
+	fi
 	$(NIX) run .#iso-build
 
 check:
