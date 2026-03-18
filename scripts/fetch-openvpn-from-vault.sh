@@ -4,7 +4,7 @@ set -euo pipefail
 # Fetch OpenVPN secrets from Vault via HTTP API (cubbyhole/openvpn).
 #
 # Usage:
-#   export VAULT_ADDR="https://wars.lan"
+#   export VAULT_ADDR="https://vault.example.lan"
 #   export VAULT_TOKEN="hvs...."
 #   ./scripts/fetch-openvpn-from-vault.sh
 #

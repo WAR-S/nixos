@@ -7,7 +7,7 @@ let
   enabled = cfg != null && (cfg.enable or true);
 
   # Базовый маршрут из примера
-  routeNet = (cfg.routeNet or "10.61.0.0");
+  routeNet = (cfg.routeNet or "127.0.0.1");
   routeMask = (cfg.routeMask or "255.255.0.0");
 
   # Если перед сборкой дернули scripts/fetch-openvpn-from-vault.sh — тут появятся файлы.
@@ -22,7 +22,7 @@ let
     client
     dev tun0
     proto tcp
-    remote ${cfg.remoteHost or "85.208.87.30"} ${toString (cfg.remotePort or 1194)}
+    remote ${cfg.remoteHost or "127.0.0.1"} ${toString (cfg.remotePort or 1194)}
     resolv-retry infinite
     float
     ping-restart 60
