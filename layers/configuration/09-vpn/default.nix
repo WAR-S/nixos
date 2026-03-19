@@ -133,14 +133,9 @@ in
   config = lib.mkIf enabled {
     environment.systemPackages = [ pkgs.openvpn ];
 
-    # Скрипт, который referenced в client.conf
-    environment.etc."openvpn/update-systemd-resolve.sh" = {
-      source = updateResolved;
-      mode = "0755";
-    };
-
-    # Если секреты заданы inline — кладём их в /etc/openvpn как обычные файлы.
+    # Файлы в /etc/openvpn: скрипт + (опционально) сертификаты/ключи.
     environment.etc = lib.mkMerge [
+      { "openvpn/update-systemd-resolve.sh" = { source = updateResolved; mode = "0755"; }; }
       (lib.mkIf (caStoreFile != null) { "openvpn/ca.crt".source = caStoreFile; })
       (lib.mkIf (certStoreFile != null) { "openvpn/client.crt".source = certStoreFile; })
       (lib.mkIf (keyStoreFile != null) { "openvpn/client.key".source = keyStoreFile; mode = "0400"; })
