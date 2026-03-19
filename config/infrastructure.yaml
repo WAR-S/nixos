@@ -3,7 +3,8 @@ release-name: "nixos-v0.0.1-14mar2026"
 os:
   hostname: edge-node
   timezone: UTC
-  diskDevice: /dev/nvme0n1
+  diskDevice: /dev/sda
+  # diskDevice: /dev/nvme0n1
 
 # Глобальный DNS (04-resolver): Cloudflare, Google, Quad9.
 resolver:
