@@ -52,7 +52,8 @@ let
     collect_dns() {
       i=1
       while :; do
-        opt="$(eval "printf '%s' \"\${foreign_option_''${i}:-}\"")"
+        var="foreign_option_$i"
+        opt="$(printenv "$var" || true)"
         [ -z "$opt" ] && break
         case "$opt" in
           *"dhcp-option DNS "*)
